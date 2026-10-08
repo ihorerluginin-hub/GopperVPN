@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Фон адаптивной иконки. Легаси-PNG уже содержит градиент,
+         а здесь нужен сплошной цвет для Android 8+. -->
+    <color name="ic_launcher_background">#FF2563EB</color>
+</resources>
