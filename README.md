@@ -66,6 +66,11 @@ failed to read geosite code ru : code ru not exists!
 
 ### Сборка
 
+Сборка локальная, CI в этом репозитории нет. Workflow из upstream
+(`.github/workflows/release.yml`, `preview.yml`) удалены: они завязаны на
+секрет `LOCAL_PROPERTIES` с путём SDK и паролями от ключа подписи, которого
+в новом репозитории нет, и на пайплайн публикации оригинального NekoBox.
+
 - `local.properties` должен быть в **LF**. С CRLF остаётся лишний `\r` в
   `sdk.dir`, и AGP падает на проверке SDK.
 - Линт форка не проходит, поэтому в `buildSrc/.../Helpers.kt` выставлено
@@ -75,6 +80,18 @@ failed to read geosite code ru : code ru not exists!
   (требует Go + NDK + gomobile) либо восстанавливается из официального APK
   1.4.2 через `dex2jar` — это возможно, потому что в upstream proguard стоит
   `-dontobfuscate`, и имена классов не обфусцированы.
+
+Порядок сборки:
+
+```
+# 1. libcore.aar (один раз)
+D:\vk\make_aar.ps1
+
+# 2. приложение
+gradlew.bat assembleRelease
+```
+
+Готовый APK: `app/build/outputs/apk/oss/release/NekoBox-1.4.2-fast-v3.apk`.
 
 ## Как ставить
 
