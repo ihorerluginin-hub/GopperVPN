@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Знак на кнопке подключения: щит и стрелка двумя слоями.
+
+  Раньше это была одна картинка ic_app_mark.png. Теперь стрелка отдельная,
+  чтобы её можно было красить в цвет кнопки (см. ConfigurationFragment
+  .updateConnectionUi): слой 1 — это стрелка, её индекс в layer-list
+  жёстко зашит в коде.
+
+  Синей подложки иконки здесь нет намеренно: подложкой служит сама кнопка.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/ic_app_shield" />
+    <item android:drawable="@drawable/ic_app_arrow" />
+</layer-list>

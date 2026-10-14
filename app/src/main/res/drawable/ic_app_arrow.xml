@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Стрелка из иконки приложения, отдельный слой.
+
+  Лежит поверх щита (ic_app_shield) и поэтому видна на нём, а не на круге
+  кнопки. Цвет задаётся в коде: ConfigurationFragment.updateConnectionUi()
+  красит стрелку в цвет кнопки, чтобы она менялась вместе с ней — красная
+  при выключенном VPN, зелёная при включённом. Заливка здесь только
+  запасной вариант на время до первой отрисовки.
+
+  Координаты — из make_icon.ps1 при side = 432, нормированы на тот же
+  квадрат 268, что и щит.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="268dp"
+    android:height="268dp"
+    android:viewportWidth="268"
+    android:viewportHeight="268">
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M133.9,51.3 L184.8,119.8 L156.7,119.8 L156.7,193.9 L111.2,193.9 L111.2,119.8 L83,119.8 Z" />
+
+</vector>

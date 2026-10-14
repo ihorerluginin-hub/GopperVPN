@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.OpenableColumns
@@ -1118,16 +1119,25 @@ class ConfigurationFragment @JvmOverloads constructor(
         // подключать» тут вводила в заблуждение: кнопка меняла цвет
         // нажатием, а не состоянием.
         v.findViewById<MaterialButton>(R.id.connect_button)?.let { connectButton ->
-            connectButton.backgroundTintList = ColorStateList.valueOf(
-                when (state) {
-                    BaseService.State.Connected ->
-                        ctx.getColorAttr(R.attr.colorPrimary)
-                    BaseService.State.Connecting ->
-                        ContextCompat.getColor(ctx, R.color.gopper_400)
-                    else ->
-                        ContextCompat.getColor(ctx, R.color.material_red_500)
+            val buttonColor = when (state) {
+                BaseService.State.Connected ->
+                    ctx.getColorAttr(R.attr.colorPrimary)
+                BaseService.State.Connecting ->
+                    ContextCompat.getColor(ctx, R.color.gopper_400)
+                else ->
+                    ContextCompat.getColor(ctx, R.color.material_red_500)
+            }
+            connectButton.backgroundTintList = ColorStateList.valueOf(buttonColor)
+
+            // Стрелка на знаке лежит поверх щита, поэтому её видно даже
+            // когда она того же цвета, что кругка: красим её так же,
+            // как кнопку, чтобы знак менялся вместе с ней.
+            (connectButton.icon as? LayerDrawable)?.let { layers ->
+                if (layers.numberOfLayers > 1) {
+                    layers.getDrawable(1)?.mutate()?.setTint(buttonColor)
                 }
-            )
+            }
+
             connectButton.contentDescription =
                 ctx.getText(if (state.canStop) R.string.stop else R.string.connect)
         }
