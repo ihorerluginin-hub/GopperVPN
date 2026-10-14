@@ -7,14 +7,18 @@
   при выключенном VPN, зелёная при включённом. Заливка здесь только
   запасной вариант на время до первой отрисовки.
 
-  Координаты — из make_icon.ps1 при side = 432, нормированы на тот же
-  квадрат 268, что и щит.
+  Размер вьюпорта обязан совпадать с ic_app_shield, иначе слои в
+  layer-list разъедутся: щит растянут до 296,1 по высоте, стрелка
+  повторяет то же значение, но сама осталась на месте — она по
+  геометрии исходной иконки и к оттянутому острию отношения не имеет.
+
+  Координаты — из make_icon.ps1 при side = 432, нормированы на 268.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="268dp"
-    android:height="268dp"
+    android:height="296.1dp"
     android:viewportWidth="268"
-    android:viewportHeight="268">
+    android:viewportHeight="296.1">
 
     <path
         android:fillColor="#FFFFFF"
