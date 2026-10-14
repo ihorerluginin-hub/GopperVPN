@@ -1213,12 +1213,22 @@ class ConfigurationFragment @JvmOverloads constructor(
                 val max = block.height
                 if (max <= 0) return
                 // dy > 0 — список прокрутился вверх, блок сворачивается
+                if (baseBottomHeight == 0) baseBottomHeight = below.height
                 val offset = (collapseOffset + dy).coerceIn(0, max)
                 if (offset == collapseOffset) return
                 collapseOffset = offset
-                val shift = -offset.toFloat()
-                block.translationY = shift
-                below.translationY = shift
+
+                // Блок кнопок уезжает сдвигом и уходит под панель. Нижний
+                // блок растёт вверх: высоту задаём явно, отступ сдвигает верх.
+                // Одного отрицательного отступа мало — проверено на
+                // устройстве: верх вставал на место, а снизу оставалась дыра,
+                // потому что weight высоту не пересчитывает.
+                block.translationY = -offset.toFloat()
+                val lp = below.layoutParams as LinearLayout.LayoutParams
+                lp.weight = 0f
+                lp.topMargin = -offset
+                lp.height = baseBottomHeight + offset
+                below.layoutParams = lp
             }
         }
         listView.addOnScrollListener(listener)
@@ -1226,6 +1236,9 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     private var collapseOffset = 0
+
+    /** Высота нижнего блока при полностью развёрнутом блоке кнопок. */
+    private var baseBottomHeight = 0
 
     private fun detachCollapseOnScroll() {
         collapseListener?.let {
@@ -1246,7 +1259,18 @@ class ConfigurationFragment @JvmOverloads constructor(
         collapseOffset = 0
         val root = view ?: return
         root.findViewById<View>(R.id.top_buttons)?.translationY = 0f
-        root.findViewById<View>(R.id.bottom_block)?.translationY = 0f
+        root.findViewById<View>(R.id.bottom_block)?.let { below ->
+            val lp = below.layoutParams as? LinearLayout.LayoutParams ?: return@let
+            lp.topMargin = 0
+            if (baseBottomHeight != 0) {
+                lp.height = baseBottomHeight
+            } else {
+                // ещё ни разу не сворачивали — возвращаем исходную развёртку
+                lp.weight = 1f
+                lp.height = 0
+            }
+            below.layoutParams = lp
+        }
     }
 
     fun currentGroupOrNull(): ProxyGroup? {
