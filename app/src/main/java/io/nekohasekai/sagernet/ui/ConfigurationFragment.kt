@@ -1113,16 +1113,19 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         val state = DataStore.serviceState
 
-        // Цвет круглой кнопки подключения: зелёный — можно подключать,
-        // красный — уже подключено, значит нажатие отключит.
+        // Цвет круглой кнопки подключения: пока VPN не подключён — красный,
+        // подключён — зелёный. Обычная логика «зелёный значит можно
+        // подключать» тут вводила в заблуждение: кнопка меняла цвет
+        // нажатием, а не состоянием.
         v.findViewById<MaterialButton>(R.id.connect_button)?.let { connectButton ->
             connectButton.backgroundTintList = ColorStateList.valueOf(
                 when (state) {
-                    BaseService.State.Connected, BaseService.State.Stopping ->
-                        ContextCompat.getColor(ctx, R.color.material_red_500)
+                    BaseService.State.Connected ->
+                        ctx.getColorAttr(R.attr.colorPrimary)
                     BaseService.State.Connecting ->
                         ContextCompat.getColor(ctx, R.color.gopper_400)
-                    else -> ctx.getColorAttr(R.attr.colorPrimary)
+                    else ->
+                        ContextCompat.getColor(ctx, R.color.material_red_500)
                 }
             )
             connectButton.contentDescription =

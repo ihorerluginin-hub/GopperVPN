@@ -42,6 +42,17 @@
                  Это MaterialButton, а не ServiceButton (FAB): на таком размере FAB
                  пересчитывал размер значка по своим правилам и рисовал его мимо
                  кнопки. Здесь размер иконки задан явно через app:iconSize.
+
+                 Внутри — щит со стрелкой из иконки приложения
+                 (drawable/ic_app_mark.png), без её синей подложки: на кнопке
+                 подложкой служит её собственный фон — красный, пока VPN не
+                 подключён, зелёный, когда подключён.
+
+                 app:iconTint="@null" обязателен: у стиля кнопки есть свой
+                 тинт по умолчанию, а он чёрный — иконка с его цветами
+                 превратилась бы в чёрный силуэт. С app:iconTint она рисуется
+                 как есть.
+
                  Пустой android:text обязателен — иначе значок прижмётся к краю. -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/connect_button"
@@ -58,11 +69,11 @@
                 android:text=""
                 app:backgroundTint="?fabColorBackground"
                 app:cornerRadius="95dp"
-                app:icon="@drawable/ic_power_24"
+                app:icon="@drawable/ic_app_mark"
                 app:iconGravity="textStart"
                 app:iconPadding="0dp"
-                app:iconSize="96dp"
-                app:iconTint="@android:color/white" />
+                app:iconSize="100dp"
+                app:iconTint="@null" />
 
             <!-- Ряд кнопок под кнопкой подключения: обновить все подписки,
                  пинг всех (только спидометр, без надписи), самый быстрый. -->
