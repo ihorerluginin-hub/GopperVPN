@@ -442,7 +442,6 @@
 <string name="subscriptions">Подписки</string>
 <string name="tcp_connections">%d TCP-соединений</string>
 <string name="tcp_keep_alive_interval">Интервал доставки пакетов TCP keep-alive</string>
-<string name="telegram">Канал обновлений в Telegram</string>
 <string name="test_concurrency">Число параллельных подключений</string>
 <string name="theme">Тема</string>
 <string name="tile_title">Переключатель</string>
@@ -507,6 +506,10 @@
 <!-- Гоппер VPN: нижняя панель, имя сервера и задержка -->
 <string name="server_not_selected">Сервер не выбран</string>
 <string name="server_name_ping">%1$s · %2$d мс</string>
+
+<!-- Гоппер VPN: контакты на экране «О приложении». Подпись «Исходный код»
+     берётся из строки github — она уже так называется. -->
+<string name="contact_email">Почта</string>
 
 <!-- Гоппер VPN: число серверов в заголовке подписки аккордеона -->
 <plurals name="servers_count">

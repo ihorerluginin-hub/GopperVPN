@@ -5,7 +5,6 @@
     <string name="app_desc">Універсальний набір інструментів проксі для Android, написаний на Kotlin.</string>
     <string name="project">Проєкт</string>
     <string name="github">Вихідний код</string>
-    <string name="telegram">Канал оновлень в Telegram</string>
     <string name="oss_licenses">Ліцензії з відкритим кодом</string>
     <string name="app_version">Версія</string>
     <string name="version_x">Версія (%s)</string>

@@ -36,6 +36,22 @@ import io.nekohasekai.sagernet.database.DataStore
 import moe.matsuri.nb4a.utils.Util
 import org.json.JSONObject
 
+/**
+ * Гоппер VPN: контакты проекта.
+ *
+ * Раньше весь экран «О приложении» указывал на MatsuriDayo и
+ * NekoBoxForAndroid: и проверка обновлений, и пункт «Исходный код», и
+ * телеграм-канал обновлений, и страница доната. Для форка это чужие
+ * адреса: пользователь уходил за обновлениями в чужой репозиторий.
+ */
+private const val GITHUB_REPO = "https://github.com/ihorerluginin-hub/GopperVPN"
+private const val GITHUB_RELEASES = "$GITHUB_REPO/releases"
+
+/** API GitHub для проверки обновлений. */
+private const val GITHUB_API = "https://api.github.com/repos/ihorerluginin-hub/GopperVPN"
+
+private const val CONTACT_EMAIL = "ihorerluginin@gmail.com"
+
 class AboutFragment : ToolbarFragment(R.layout.layout_about) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -82,9 +98,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                 .text(R.string.app_version)
                                 .subText(SagerNet.appVersionNameForDisplay)
                                 .setOnClickAction {
-                                    requireContext().launchCustomTab(
-                                        "https://github.com/MatsuriDayo/NekoBoxForAndroid/releases"
-                                    )
+                                    requireContext().launchCustomTab(GITHUB_RELEASES)
                                 }
                                 .build())
                         .addItem(
@@ -107,17 +121,6 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                 .text(getString(R.string.version_x, "sing-box"))
                                 .subText(Libcore.versionBox())
                                 .setOnClickAction { }
-                                .build())
-                        .addItem(
-                            MaterialAboutActionItem.Builder()
-                                .icon(R.drawable.ic_baseline_card_giftcard_24)
-                                .text(R.string.donate)
-                                .subText(R.string.donate_info)
-                                .setOnClickAction {
-                                    requireContext().launchCustomTab(
-                                        "https://matsuridayo.github.io/index_docs/#donate"
-                                    )
-                                }
                                 .build())
                         .apply {
                             PackageCache.awaitLoadSync()
@@ -182,19 +185,21 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                 .icon(R.drawable.ic_baseline_sanitizer_24)
                                 .text(R.string.github)
                                 .setOnClickAction {
-                                    requireContext().launchCustomTab(
-                                        "https://github.com/MatsuriDayo/NekoBoxForAndroid"
-
-                                    )
+                                    requireContext().launchCustomTab(GITHUB_REPO)
                                 }
                                 .build())
                         .addItem(
                             MaterialAboutActionItem.Builder()
-                                .icon(R.drawable.ic_qu_shadowsocks_foreground)
-                                .text(R.string.telegram)
+                                .icon(R.drawable.ic_baseline_email_24)
+                                .text(R.string.contact_email)
+                                .subText(CONTACT_EMAIL)
                                 .setOnClickAction {
-                                    requireContext().launchCustomTab(
-                                        "https://t.me/MatsuriDayo"
+                                    // Письмо открываем системным почтовым
+                                    // клиентом: в отличие от ссылки на
+                                    // репозиторий, mailto: уводит туда же,
+                                    // где пользователь уже всё настроил.
+                                    startActivity(
+                                        Intent(Intent.ACTION_VIEW, "mailto:$CONTACT_EMAIL".toUri())
                                     )
                                 }
                                 .build())
@@ -220,9 +225,9 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                     }
                     val response = client.newRequest().apply {
                         if (checkPreview) {
-                            setURL("https://api.github.com/repos/MatsuriDayo/NekoBoxForAndroid/releases/tags/preview")
+                            setURL("$GITHUB_API/releases/tags/preview")
                         } else {
-                            setURL("https://api.github.com/repos/MatsuriDayo/NekoBoxForAndroid/releases/latest")
+                            setURL("$GITHUB_API/releases/latest")
                         }
                     }.execute()
                     val release = JSONObject(Util.getStringBox(response.contentString))

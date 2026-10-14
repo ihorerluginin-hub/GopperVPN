@@ -17,7 +17,6 @@
     <string name="logcat">Debug-Informationen exportieren</string>
     <string name="version_x">Version (%s)</string>
     <string name="oss_licenses">Quelloffene Lizenzen</string>
-    <string name="telegram">Telegramm-Update-Kanal</string>
     <string name="github">Quellcode</string>
     <string name="project">Projekt</string>
     <string name="app_desc">Die universelle Proxy-Toolchain für Android, geschrieben in Kotlin.</string>

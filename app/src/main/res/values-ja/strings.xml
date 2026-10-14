@@ -47,7 +47,6 @@
     <string name="version_x">バージョン (%s)</string>
     <string name="app_version">バージョン</string>
     <string name="oss_licenses">オープンソースライセンス</string>
-    <string name="telegram">Telegram 更新チャンネル</string>
     <string name="github">ソースコード</string>
     <string name="project">プロジェクト</string>
     <string name="app_desc">Kotlinで記述されたAndroid用のユニバーサルプロキシツールチェーン。</string>

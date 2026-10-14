@@ -5,7 +5,6 @@
     <string name="app_desc">The universal proxy toolchain for Android, written in Kotlin.</string>
     <string name="project">Project</string>
     <string name="github">Source code</string>
-    <string name="telegram">Telegram update channel</string>
     <string name="oss_licenses">Open source licenses</string>
     <string name="app_version">Version</string>
     <string name="version_x">Version (%s)</string>
@@ -595,6 +594,10 @@
 <!-- Гоппер VPN: нижняя панель, имя сервера и задержка -->
 <string name="server_not_selected">No server selected</string>
 <string name="server_name_ping">%1$s · %2$d ms</string>
+
+<!-- Гоппер VPN: контакты на экране «О приложении». Подпись «Исходный код»
+     берётся из строки github — она уже так называется. -->
+<string name="contact_email">Email</string>
 
 <!-- Гоппер VPN: число серверов в заголовке подписки аккордеона -->
 <plurals name="servers_count">

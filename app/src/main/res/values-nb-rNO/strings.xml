@@ -78,7 +78,6 @@
     <string name="version_x">Versjon (%s)</string>
     <string name="app_version">Versjon</string>
     <string name="oss_licenses">Friproglisenser</string>
-    <string name="telegram">Telegram-oppdateringskanal</string>
     <string name="github">Kildekode</string>
     <string name="project">Prosjekt</string>
     <string name="connecting">Kobler til …</string>
