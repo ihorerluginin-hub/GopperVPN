@@ -126,7 +126,6 @@
 <string name="disable">Отключить</string>
 <string name="dns_hosts">Перезапись домена</string>
 <string name="dns_routing_message">Разрешить домены в обходных маршрутах с помощью Direct DNS. Помните о потенциальных утечках DNS</string>
-<string name="document">Документы</string>
 <string name="domain_strategy">Правило разрешения доменов</string>
 <string name="domain_strategy_for_direct">Правило домена для Прямого</string>
 <string name="domain_strategy_for_remote">Правило домена для Удаленного</string>
