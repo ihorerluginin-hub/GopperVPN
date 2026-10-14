@@ -596,6 +596,12 @@
 <string name="server_not_selected">No server selected</string>
 <string name="server_name_ping">%1$s · %2$d ms</string>
 
+<!-- Гоппер VPN: число серверов в заголовке подписки аккордеона -->
+<plurals name="servers_count">
+    <item quantity="one">%d server</item>
+    <item quantity="other">%d servers</item>
+</plurals>
+
 
 <!-- Гоппер VPN: общая сортировка и строка действий подписки -->
 <string name="sort_servers_by_delay">Sort servers by ping</string>

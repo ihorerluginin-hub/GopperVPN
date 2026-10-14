@@ -508,6 +508,14 @@
 <string name="server_not_selected">Сервер не выбран</string>
 <string name="server_name_ping">%1$s · %2$d мс</string>
 
+<!-- Гоппер VPN: число серверов в заголовке подписки аккордеона -->
+<plurals name="servers_count">
+    <item quantity="one">%d сервер</item>
+    <item quantity="few">%d сервера</item>
+    <item quantity="many">%d серверов</item>
+    <item quantity="other">%d серверов</item>
+</plurals>
+
 
 <!-- Гоппер VPN: общая сортировка и строка действий подписки -->
 <string name="sort_servers_by_delay">Сортировать серверы по пингу</string>

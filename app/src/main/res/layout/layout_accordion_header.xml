@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Заголовок подписки в вертикальном аккордеоне.
+
+  Слева треугольник (свёрнута/развёрнута), по центру название и число
+  серверов, справа три кнопки: настройки, URL-тест (спидометр) и
+  обновить подписку. Нажатие на всю строку, кроме кнопок, сворачивает
+  или разворачивает подписку.
+
+  Кнопки «обновить все подписки» здесь нет намеренно: она уже есть в
+  ряду под кнопкой подключения.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/accordion_header"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:baselineAligned="false"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="56dp"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingEnd="4dp">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/accordion_triangle"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:importantForAccessibility="no"
+        app:srcCompat="@drawable/ic_baseline_expand_more_24"
+        app:tint="?attr/colorControlNormal" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="6dp"
+        android:paddingEnd="4dp">
+
+        <TextView
+            android:id="@+id/accordion_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="Subscription #1791997801993" />
+
+        <TextView
+            android:id="@+id/accordion_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="12sp"
+            tools:text="12 серверов" />
+
+    </LinearLayout>
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/accordion_settings"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/subscription_settings"
+        android:focusable="true"
+        app:srcCompat="@drawable/ic_action_settings"
+        app:tint="?attr/colorControlNormal" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/accordion_url_test"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/url_test"
+        android:focusable="true"
+        app:srcCompat="@drawable/ic_baseline_speed_24"
+        app:tint="?attr/colorControlNormal" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/accordion_update"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/update_subscription"
+        android:focusable="true"
+        app:srcCompat="@drawable/ic_baseline_refresh_24"
+        app:tint="?attr/colorControlNormal" />
+
+</LinearLayout>

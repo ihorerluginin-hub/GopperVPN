@@ -125,12 +125,20 @@
 
         </LinearLayout>
 
-        <!-- Подвижная часть: вкладки, строка действий, список серверов.
-             Едет вверх вместе с блоком кнопок.
+        <!-- Подвижная часть: вертикальный аккордеон подписок. Едет вверх
+             вместе с блоком кнопок.
 
-             Раньше здесь была карточка статуса с состоянием подключения и
-             выбранным сервером. Она удалена: эти данные показывает нижняя
-             панель StatsBar, а дубль под кнопками только занимал место. -->
+             Раньше здесь были вкладки подписок (TabLayout), строка
+             действий текущей подписки и ViewPager2 с отдельным
+             фрагментом на каждую подписку. Теперь всё это один
+             RecyclerView: заголовок подписки, под ним её серверы,
+             под ними — заголовок следующей подписки. Тап по
+             заголовку сворачивает подписку до одной строки.
+
+             Раньше здесь же была карточка статуса с состоянием
+             подключения и выбранным сервером. Она удалена: эти данные
+             показывает нижняя панель StatsBar, а дубль под кнопками
+             только занимал место. -->
         <LinearLayout
             android:id="@+id/bottom_block"
             android:layout_width="match_parent"
@@ -138,33 +146,14 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/group_tab"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/accordion_list"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?colorPrimary"
-                android:elevation="4dp"
-                android:visibility="gone"
-                app:tabIndicatorColor="?tabIndicatorColor"
-                app:tabIndicatorFullWidth="false"
-                app:tabMode="scrollable"
-                app:tabPaddingStart="16dp"
-                app:tabRippleColor="?tabRippleColor"
-                app:tabSelectedTextColor="?tabSelectedTextColor"
-                app:tabTextColor="?tabTextColor"
-                app:tabUnboundedRipple="false" />
-
-            <!-- Гоппер VPN: строка действий текущей подписки. Позже переедет
-                 в заголовок каждой подписки, когда появится вертикальный аккордеон. -->
-            <include
-                layout="@layout/layout_group_actions"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/group_pager"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:scrollbarSize="0dp"
+                tools:listitem="@layout/layout_accordion_header" />
 
         </LinearLayout>
 
