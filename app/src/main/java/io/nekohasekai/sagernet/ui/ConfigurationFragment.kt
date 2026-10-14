@@ -278,10 +278,12 @@ class ConfigurationFragment @JvmOverloads constructor(
                 override fun onMove(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder,
-                ): Boolean {
-                    adapter.moveProfile(viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
-                    return true
-                }
+                ): Boolean =
+                    // вернуть false обязательно: иначе ItemTouchHelper
+                    // покажет, что сервер переехал, а он останется на месте
+                    adapter.moveProfile(
+                        viewHolder.bindingAdapterPosition, target.bindingAdapterPosition
+                    )
 
                 override fun clearView(
                     recyclerView: RecyclerView,
@@ -1343,12 +1345,12 @@ class ConfigurationFragment @JvmOverloads constructor(
      * список строк собирается в [rows]: на каждую подписку идёт
      * заголовок, а под ним — её профили, если подписка раскрыта.
      *
-     * Раскрыта не более одной подписки за раз; её id лежит в
-     * [expandedId]. [DataStore.selectedGroup] хранит то же значение,
-     * потому что остальной код приложения (URL-тест, «текущая подписка»,
-     * настройки) смотрит именно туда. Когда все свёрнуты, expandedId
-     * равен нулю, а в DataStore остаётся последняя раскрытая — иначе
-     * «текущая подписка» была бы потеряна.
+     * Раскрытых подписок сколько угодно, их id в [expanded]. Отдельно
+     * держится [DataStore.selectedGroup]: туда смотрит остальной код
+     * (URL-тест, «текущая подписка», настройки, меню порядка серверов),
+     * и это всегда одна подписка — последняя, которую развернули.
+     * Когда все свёрнуты, там остаётся прежнее значение, иначе «текущая
+     * подписка» была бы потеряна.
      */
     inner class AccordionAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
         ProfileManager.Listener,
@@ -1369,17 +1371,17 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         private var rows: List<Row> = emptyList()
 
-        /** Раскрытая подписка; 0 — свёрнуты все. */
-        var expandedId = 0L
+        /** Раскрытые подписки: хоть все сразу, порядок не важен. */
+        val expanded = LinkedHashSet<Long>()
 
-        /** Сработало, когда раскрытая подписка сменилась: обновить меню и сбросить сворачивание. */
+        /** Сработало, когда набор раскрытых подписок изменился. */
         var onGroupChanged: (() -> Unit)? = null
 
         private fun rebuildRows() {
             val out = ArrayList<Row>(groupList.size + 8)
             for (group in groupList) {
                 out.add(Row(group, null))
-                if (expandedId == group.id) {
+                if (group.id in expanded) {
                     groupData[group.id]?.ids?.forEach { out.add(Row(group, it)) }
                 }
             }
@@ -1394,10 +1396,17 @@ class ConfigurationFragment @JvmOverloads constructor(
         fun positionOfHeader(groupId: Long): Int =
             rows.indexOfFirst { it.profileId == null && it.group.id == groupId }
 
+        fun isExpanded(groupId: Long): Boolean = groupId in expanded
+
+        /**
+         * Развернуть подписку. Остальные не трогаются — раскрытых может
+         * быть сколько угодно. Текущей подпиской становится именно она,
+         * потому что дальше к ней применяются URL-тест и меню порядка.
+         */
         fun expand(groupId: Long) {
-            if (groupId <= 0 || expandedId == groupId) return
+            if (groupId <= 0 || groupId in expanded) return
             if (groupList.none { it.id == groupId }) return
-            expandedId = groupId
+            expanded.add(groupId)
             DataStore.selectedGroup = groupId
             rebuildRows()
             notifyDataSetChanged()
@@ -1405,15 +1414,20 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
 
         fun collapse(groupId: Long) {
-            if (expandedId != groupId) return
-            expandedId = 0L
+            if (groupId !in expanded) return
+            expanded.remove(groupId)
+            // Свёрнутая подписка перестаёт быть текущей, если раскрытых
+            // больше нет — тогда текущей становится любая из оставшихся.
+            if (DataStore.selectedGroup == groupId) {
+                expanded.firstOrNull()?.let { DataStore.selectedGroup = it }
+            }
             rebuildRows()
             notifyDataSetChanged()
             onGroupChanged?.invoke()
         }
 
         fun toggle(groupId: Long) {
-            if (expandedId == groupId) collapse(groupId) else expand(groupId)
+            if (groupId in expanded) collapse(groupId) else expand(groupId)
         }
 
         fun reload(now: Boolean = false) {
@@ -1450,7 +1464,11 @@ class ConfigurationFragment @JvmOverloads constructor(
                     groupList = newGroupList
                     groupData.clear()
                     groupData.putAll(loaded)
-                    expandedId = target
+                    // при полной перечитке раскрытой остаётся текущая:
+                    // перечитка вызывается при импорте и смене набора
+                    // подписок, сохранять тут всё развёрнутое незачем
+                    expanded.clear()
+                    if (target > 0) expanded.add(target)
                     rebuildRows()
                     notifyDataSetChanged()
                     onGroupChanged?.invoke()
@@ -1537,21 +1555,34 @@ class ConfigurationFragment @JvmOverloads constructor(
         private val updated = HashSet<ProxyEntity>()
 
         /** Сервер можно тащить только в пределах своей подписки. */
+        /**
+         * Гоппер VPN: сервер можно тащить только внутри своей подписки.
+         *
+         * Заголовки не двигаются, и сервер нельзя перебросить в чужую
+         * подписку: порядок там задаётся своим полем userOrder, и
+         * перенос одного сервера в чужой список означал бы, что он
+         * перескочил в начало этого списка.
+         */
         fun canMove(from: Int, to: Int): Boolean {
             val a = rowAt(from) ?: return false
             val b = rowAt(to) ?: return false
             return a.profileId != null && b.profileId != null && a.group.id == b.group.id
         }
 
-        fun moveProfile(from: Int, to: Int) {
-            if (!canMove(from, to)) return
-            val firstId = rows[from].profileId ?: return
-            val targetId = rows[to].profileId ?: return
-            val data = groupData[rows[from].group.id] ?: return
-            val first = data.map[firstId] ?: return
+        /**
+         * Переставить сервер. Возвращает false, если перенос запрещён —
+         * ItemTouchHelper обязан знать это, иначе он покажет анимацию
+         * переноса, а данные останутся на месте.
+         */
+        fun moveProfile(from: Int, to: Int): Boolean {
+            if (!canMove(from, to)) return false
+            val firstId = rows[from].profileId ?: return false
+            val targetId = rows[to].profileId ?: return false
+            val data = groupData[rows[from].group.id] ?: return false
+            val first = data.map[firstId] ?: return false
             val firstIndex = data.ids.indexOf(firstId)
             val targetIndex = data.ids.indexOf(targetId)
-            if (firstIndex < 0 || targetIndex < 0) return
+            if (firstIndex < 0 || targetIndex < 0) return false
 
             var previousOrder = first.userOrder
             val (step, range) = if (firstIndex < targetIndex) {
@@ -1572,6 +1603,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             updated.add(first)
             rebuildRows()
             notifyItemMoved(from, to)
+            return true
         }
 
         fun commitMove() = runOnDefaultDispatcher {
@@ -1724,14 +1756,14 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         fun bind(group: ProxyGroup) {
             val total = adapter.groupData[group.id]?.ids?.size ?: 0
-            val expanded = adapter.expandedId == group.id
+            val isOpen = adapter.isExpanded(group.id)
 
             name.text = runCatching { group.displayName() }.getOrNull()
                 ?.takeIf { it.isNotBlank() }
                 ?: getString(R.string.menu_configuration)
             count.text = view.resources.getQuantityString(R.plurals.servers_count, total, total)
             triangle.setImageResource(
-                if (expanded) R.drawable.ic_baseline_expand_less_24
+                if (isOpen) R.drawable.ic_baseline_expand_less_24
                 else R.drawable.ic_baseline_expand_more_24
             )
 
