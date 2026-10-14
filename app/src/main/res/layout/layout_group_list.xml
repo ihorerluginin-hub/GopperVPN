@@ -69,14 +69,20 @@
 
                 <!-- Высота 133dp, а не квадрат: остриё щита оттянуто на 2 мм, вьюпорт
                      стал 268 × 296.1. Чтобы сам щит остался прежних
-                     120dp по ширине, высота пропорционально увеличена. -->
+                     120dp по ширине, высота пропорционально увеличена.
+
+                     translationY 12.6dp — те же 2 мм, но уже сдвигом всего
+                     щита внутри кнопки. Именно translationY, а не отступ:
+                     отступ двигал бы вью целиком и порвал бы
+                     вертикальное центрирование по центру кнопки. -->
                 <ImageView
                     android:id="@+id/connect_icon"
                     android:layout_width="120dp"
                     android:layout_height="133dp"
                     android:layout_gravity="center"
                     android:importantForAccessibility="no"
-                    android:src="@drawable/ic_app_mark" />
+                    android:src="@drawable/ic_app_mark"
+                    android:translationY="12.6dp" />
 
             </FrameLayout>
 
