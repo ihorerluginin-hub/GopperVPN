@@ -1,4 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?><!--
+  Главный экран «Гоппер VPN».
+
+  Порядок сверху вниз: панель, круглая кнопка подключения (3 см), три
+  кнопки проверки связи под ней слева, карточка статуса, список подписок.
+
+  Кнопка подключения сдвинута влево, а не по центру экрана, и находится
+  в одной колонке с тремя кнопками под ней — так управление читается
+  как единый блок, а не как плавающий кружок посреди пустоты.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,6 +18,91 @@
 
     <include
         layout="@layout/layout_appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Круглая кнопка подключения. 190dp ≈ 3 см: в Android 1dp = 1/160 дюйма,
+         так что 3 см = 3/2,54*160 ≈ 189dp.
+
+         Это MaterialButton, а не ServiceButton (FAB): на таком размере FAB
+         пересчитывал размер значка по своим правилам и рисовал его мимо
+         кнопки. Здесь размер иконки задан явно через app:iconSize.
+         Пустой android:text обязателен — иначе значок прижмётся к краю. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/connect_button"
+        android:layout_width="190dp"
+        android:layout_height="190dp"
+        android:layout_gravity="start"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="6dp"
+        android:contentDescription="@string/connect"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text=""
+        app:backgroundTint="?fabColorBackground"
+        app:cornerRadius="95dp"
+        app:icon="@drawable/ic_power_24"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:iconSize="96dp"
+        app:iconTint="@android:color/white" />
+
+    <!-- Три кнопки проверки связи, столбиком слева, под кнопкой подключения.
+         Кнопка «пинг всех» — только спидометр, без надписи. -->
+    <LinearLayout
+        android:id="@+id/quick_test_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="6dp"
+        android:baselineAligned="false"
+        android:orientation="vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/ping_current_button"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:text="@string/ping_current_server"
+            android:textSize="13sp"
+            app:icon="@drawable/ic_baseline_network_ping_24"
+            app:iconGravity="textStart"
+            app:iconPadding="6dp"
+            app:iconSize="18dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/ping_all_button"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:contentDescription="@string/ping_all_servers"
+            app:icon="@drawable/ic_baseline_speed_24"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="20dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/fastest_button"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/fastest_server"
+            android:textSize="13sp"
+            app:icon="@drawable/ic_baseline_bolt_24"
+            app:iconGravity="textStart"
+            app:iconPadding="6dp"
+            app:iconSize="18dp" />
+
+    </LinearLayout>
+
+    <!-- Гоппер VPN: карточка статуса. Скрывается, когда фрагмент открыт
+         для выбора профиля, — там она не нужна. -->
+    <include
+        layout="@layout/layout_status_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -27,47 +121,6 @@
         app:tabSelectedTextColor="?tabSelectedTextColor"
         app:tabTextColor="?tabTextColor"
         app:tabUnboundedRipple="false" />
-
-    <LinearLayout
-        android:id="@+id/quick_test_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:baselineAligned="false"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="4dp">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/ping_all_button"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:text="@string/ping_all_servers"
-            android:textSize="12sp"
-            app:icon="@drawable/ic_baseline_refresh_24"
-            app:iconGravity="textStart"
-            app:iconSize="16dp"
-            app:iconPadding="4dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/fastest_button"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:text="@string/fastest_server"
-            android:textSize="12sp"
-            app:icon="@drawable/ic_baseline_speed_24"
-            app:iconGravity="textStart"
-            app:iconSize="16dp"
-            app:iconPadding="4dp" />
-
-    </LinearLayout>
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/group_pager"

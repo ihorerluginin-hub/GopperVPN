@@ -591,4 +591,14 @@
 <!-- NekoBox Fast: link reading -->
 <string name="import_from_qr_image">From QR image</string>
 <string name="qr_image_no_code">No QR code found in that image</string>
+
+<!-- Гоппер VPN: карточка статуса -->
+<string name="status_card_connected">Connected</string>
+<string name="status_card_disconnected">Not connected</string>
+<string name="status_card_no_server">No server selected</string>
+<string name="status_card_server_ping">%1$s · %2$d ms</string>
+
+<!-- Гоппер VPN: одиночный пинг -->
+<string name="ping_current_server">Ping</string>
+<string name="ping_current_failed">%1$s did not answer</string>
 </resources>

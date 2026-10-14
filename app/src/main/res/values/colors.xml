@@ -25,7 +25,26 @@
         <item>@color/material_grey_500</item>
         <item>@color/material_blue_grey_500</item>
         <item>@color/material_light_black</item>
+        <!-- Гоппер VPN. ВАЖНО: новые цвета добавляются только в конец массива.
+             Индекс элемента = номер темы в Theme.kt, и вставка в середину
+             сдвинет все номера, из-за чего сохранённая пользователем тема
+             будет применяться не к тому цвету. -->
+        <item>@color/gopper_500</item>
     </integer-array>
+
+    <!-- Фирменная зелёная палитра «Гоппер VPN».
+         Основной #0B8A4B подобран так, чтобы белый текст давал контраст 4,48:1
+         (WCAG AA требует 4,5:1 для основного текста). -->
+    <color name="gopper_50">#E8F6EE</color>
+    <color name="gopper_100">#C9EAD7</color>
+    <color name="gopper_200">#A3DCBC</color>
+    <color name="gopper_300">#6FCB9C</color>
+    <color name="gopper_400">#35B97B</color>
+    <color name="gopper_500">#0B8A4B</color>
+    <color name="gopper_600">#0A7040</color>
+    <color name="gopper_700">#085735</color>
+    <color name="gopper_800">#063F27</color>
+    <color name="gopper_accent_200">#7BE3AF</color>
 
     <color name="material_amber_100">#FFECB3</color>
     <color name="material_amber_200">#FFE082</color>

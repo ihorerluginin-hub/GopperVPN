@@ -9,14 +9,13 @@ import android.os.Build
 import android.os.Bundle
 import android.os.RemoteException
 import android.view.KeyEvent
-import android.view.MenuItem
+import android.view.Menu
 import androidx.activity.addCallback
 import androidx.annotation.IdRes
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceDataStore
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import io.nekohasekai.sagernet.BuildConfig
 import io.nekohasekai.sagernet.GroupType
@@ -52,28 +51,32 @@ import moe.matsuri.nb4a.utils.Util
 
 class MainActivity : ThemedActivity(),
     SagerConnection.Callback,
-    OnPreferenceDataStoreChangeListener,
-    NavigationView.OnNavigationItemSelectedListener {
+    OnPreferenceDataStoreChangeListener {
 
     lateinit var binding: LayoutMainBinding
-    lateinit var navigation: NavigationView
+
+    // Гоппер VPN: выдвижной ящик за бургером убран, навигация — через меню
+    // шестерёнки в ToolbarFragment. Этот id держит «где мы сейчас», чтобы
+    // повторный клик по тому же пункту не пересоздавал фрагмент заново.
+    private var currentDestinationId: Int = R.id.nav_configuration
+
+    // Гоппер VPN: карточка статуса на главном экране живёт во фрагменте,
+    // а состояние подключения — здесь. Фрагмент подписывается на это
+    // свойство и обновляет карточку при смене состояния или сервера.
+    // Держим именно функцию, а не Listener, чтобы фрагменту не пришлось
+    // реализовывать интерфейс и отписываться по ссылке.
+    var statusListener: (() -> Unit)? = null
+
+    fun notifyStatusChanged() {
+        statusListener?.invoke()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = LayoutMainBinding.inflate(layoutInflater)
         binding.fab.initProgress(binding.fabProgress)
-        if (themeResId !in intArrayOf(
-                R.style.Theme_SagerNet_Black
-            )
-        ) {
-            navigation = binding.navView
-            binding.drawerLayout.removeView(binding.navViewBlack)
-        } else {
-            navigation = binding.navViewBlack
-            binding.drawerLayout.removeView(binding.navView)
-        }
-        navigation.setNavigationItemSelectedListener(this)
+        binding.fab.hide()   // Гоппер VPN: подключение теперь большой кнопкой сверху
 
         if (savedInstanceState == null) {
             displayFragmentWithId(R.id.nav_configuration)
@@ -86,11 +89,7 @@ class MainActivity : ThemedActivity(),
             }
         }
 
-        binding.fab.setOnClickListener {
-            if (DataStore.serviceState.canStop) SagerNet.stopService() else connect.launch(
-                null
-            )
-        }
+        binding.fab.setOnClickListener { toggleService() }
         binding.stats.setOnClickListener { if (DataStore.serviceState.connected) binding.stats.testConnection() }
 
         setContentView(binding.root)
@@ -102,8 +101,6 @@ class MainActivity : ThemedActivity(),
         if (intent?.action == Intent.ACTION_VIEW) {
             onNewIntent(intent)
         }
-
-        refreshNavMenu(DataStore.enableClashAPI)
 
         // sdk 33 notification
         if (Build.VERSION.SDK_INT >= 33) {
@@ -126,11 +123,23 @@ class MainActivity : ThemedActivity(),
         }
     }
 
-    fun refreshNavMenu(clashApi: Boolean) {
-        if (::navigation.isInitialized) {
-            navigation.menu.findItem(R.id.nav_traffic)?.isVisible = clashApi
-            navigation.menu.findItem(R.id.nav_tuiguang)?.isVisible = !isPlay
-        }
+    /**
+     * Гоппер VPN: переключение VPN. Используется и круглым FAB (он скоро
+     * будет скрыт), и большой кнопкой подключения на главном экране —
+     * логика живёт в одном месте, чтобы они не разошлись.
+     */
+    fun toggleService() {
+        if (DataStore.serviceState.canStop) SagerNet.stopService() else connect.launch(null)
+    }
+
+    /**
+     * Гоппер VPN: применяет к меню шестерёнки то, что раньше делалось с
+     * пунктами ящика. Меню пересоздаётся при каждом открытии, поэтому здесь
+     * достаточно прочитать актуальное значение из настроек.
+     */
+    fun refreshGearMenu(menu: Menu) {
+        menu.findItem(R.id.nav_traffic)?.isVisible = DataStore.enableClashAPI
+        menu.findItem(R.id.nav_tuiguang)?.isVisible = !isPlay
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -304,31 +313,32 @@ class MainActivity : ThemedActivity(),
             .show()
     }
 
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        if (item.isChecked) binding.drawerLayout.closeDrawers() else {
-            return displayFragmentWithId(item.itemId)
-        }
-        return true
-    }
-
-
     @SuppressLint("CommitTransaction")
     fun displayFragment(fragment: ToolbarFragment) {
-        if (fragment is ConfigurationFragment) {
-            binding.stats.allowShow = true
-            binding.fab.show()
-        } else if (!DataStore.showBottomBar) {
+        if (fragment !is ConfigurationFragment && !DataStore.showBottomBar) {
             binding.stats.allowShow = false
             binding.stats.performHide()
-            binding.fab.hide()
         }
+        // Гоппер VPN: круглый FAB заменён большой кнопкой подключения
+        // на главном экране, поэтому больше не показывается вовсе.
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_holder, fragment)
             .commitAllowingStateLoss()
-        binding.drawerLayout.closeDrawers()
     }
 
+    /**
+     * Переход по пункту меню шестерёнки.
+     *
+     * Возвращает false, если мы уже на этом экране — тогда ничего не
+     * пересоздаём, иначе при каждом нажатии терялись бы позиция прокрутки
+     * и развёрнутые подписки. Именно так раньше работал пункт в ящике.
+     */
     fun displayFragmentWithId(@IdRes id: Int): Boolean {
+        if (id == currentDestinationId && supportFragmentManager
+                .findFragmentById(R.id.fragment_holder) != null
+        ) {
+            return true
+        }
         when (id) {
             R.id.nav_configuration -> {
                 displayFragment(ConfigurationFragment())
@@ -353,7 +363,7 @@ class MainActivity : ThemedActivity(),
 
             else -> return false
         }
-        navigation.menu.findItem(id).isChecked = true
+        currentDestinationId = id
         return true
     }
 
@@ -367,6 +377,7 @@ class MainActivity : ThemedActivity(),
         binding.fab.changeState(state, DataStore.serviceState, animate)
         binding.stats.changeState(state)
         if (msg != null) snackbar(getString(R.string.vpn_error, msg)).show()
+        notifyStatusChanged()
     }
 
     override fun snackbarInternal(text: CharSequence): Snackbar {
@@ -417,6 +428,7 @@ class MainActivity : ThemedActivity(),
         val old = DataStore.selectedProxy
         DataStore.selectedProxy = id
         DataStore.currentProfile = id
+        notifyStatusChanged()
         runOnDefaultDispatcher {
             ProfileManager.postUpdate(old, true)
             ProfileManager.postUpdate(id, true)
@@ -454,23 +466,8 @@ class MainActivity : ThemedActivity(),
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_LEFT -> {
-                if (super.onKeyDown(keyCode, event)) return true
-                binding.drawerLayout.open()
-                navigation.requestFocus()
-            }
-
-            KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                if (binding.drawerLayout.isOpen) {
-                    binding.drawerLayout.close()
-                    return true
-                }
-            }
-        }
-
+        // Гоппер VPN: обработка стрелок джойстика для ящика удалена вместе с ним.
         if (super.onKeyDown(keyCode, event)) return true
-        if (binding.drawerLayout.isOpen) return false
 
         val fragment =
             supportFragmentManager.findFragmentById(R.id.fragment_holder) as? ToolbarFragment

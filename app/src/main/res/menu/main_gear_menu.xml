@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Меню шестерёнки. Раньше эти пункты жили в выдвижном ящике за бургером;
+  теперь бургер заменён на иконку с настройками, а список переехал сюда.
+
+  Группы намеренно без android:checkableBehavior="single" — в PopupMenu
+  галочки «сейчас открыт этот пункт» только мешают и требуют отдельного
+  обновления состояния при каждой навигации.
+-->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group android:checkableBehavior="single">
+    <group android:id="@+id/gear_main">
         <item
             android:id="@+id/nav_configuration"
             android:icon="@drawable/ic_action_description"
@@ -23,34 +31,34 @@
             android:title="@string/settings" />
     </group>
 
-    <group
-        android:id="@+id/misc"
-        android:checkableBehavior="single">
+    <group android:id="@+id/gear_misc">
         <item
             android:id="@+id/nav_logcat"
             android:icon="@drawable/ic_baseline_bug_report_24"
             android:title="@string/menu_log" />
+
         <item
             android:id="@+id/nav_traffic"
             android:icon="@drawable/ic_baseline_transform_24"
             android:title="@string/menu_dashboard" />
+
         <item
             android:id="@+id/nav_tools"
             android:icon="@drawable/baseline_construction_24"
             android:title="@string/menu_tools" />
     </group>
 
-    <group
-        android:id="@+id/about"
-        android:checkableBehavior="single">
+    <group android:id="@+id/gear_about">
         <item
             android:id="@+id/nav_tuiguang"
             android:icon="@drawable/ic_social_share"
             android:title="@string/ads" />
+
         <item
             android:id="@+id/nav_faq"
             android:icon="@drawable/ic_device_data_usage"
             android:title="@string/document" />
+
         <item
             android:id="@+id/nav_about"
             android:icon="@drawable/ic_baseline_info_24"

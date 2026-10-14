@@ -472,6 +472,25 @@
         <item name="primaryOrTextPrimary">?android:textColorPrimary</item>
     </style>
 
+    <!-- Фирменная тема «Гоппер VPN». Тема по умолчанию.
+         Отличается от стандартной Material.Green своим оттенком: #0B8A4B
+         вместо #4CAF50. -->
+    <style name="Theme.SagerNet.Gopper">
+        <item name="colorPrimary">@color/gopper_500</item>
+        <item name="colorPrimaryDark">@color/gopper_700</item>
+        <item name="colorAccent">@color/gopper_accent_200</item>
+        <item name="colorMaterial100">@color/gopper_100</item>
+        <item name="colorMaterial300">@color/gopper_300</item>
+    </style>
+
+    <style name="Theme.SagerNet.Dialog.Gopper">
+        <item name="colorPrimary">@color/gopper_500</item>
+        <item name="colorPrimaryDark">@color/gopper_700</item>
+        <item name="colorAccent">@color/gopper_accent_200</item>
+        <item name="colorMaterial100">@color/gopper_100</item>
+        <item name="colorMaterial300">@color/gopper_300</item>
+    </style>
+
     <style name="Theme.Start" parent="Theme.MaterialComponents.DayNight">
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="colorPrimary">@android:color/transparent</item>

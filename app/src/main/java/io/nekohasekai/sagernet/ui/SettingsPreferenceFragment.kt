@@ -143,7 +143,8 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val acquireWakeLock = findPreference<SwitchPreference>(Key.ACQUIRE_WAKE_LOCK)!!
         val enableClashAPI = findPreference<SwitchPreference>(Key.ENABLE_CLASH_API)!!
         enableClashAPI.setOnPreferenceChangeListener { _, newValue ->
-            (activity as MainActivity?)?.refreshNavMenu(newValue as Boolean)
+            // Меню шестерёнки пересоздаётся при каждом открытии и само читает
+            // DataStore.enableClashAPI, поэтому обновлять его отсюда больше не нужно.
             needReload()
             true
         }

@@ -2,6 +2,7 @@ package io.nekohasekai.sagernet.ui
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.os.SystemClock
@@ -22,6 +23,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
@@ -205,11 +207,21 @@ class ConfigurationFragment @JvmOverloads constructor(
         ProfileManager.addListener(adapter)
         GroupManager.addListener(adapter)
 
+        // Гоппер VPN: круглая кнопка подключения сверху.
+        val connectButton = view.findViewById<MaterialButton>(R.id.connect_button)
+        connectButton.isVisible = !select
+        if (!select) {
+            connectButton.setOnClickListener { (activity as? MainActivity)?.toggleService() }
+        }
+
         // NekoBox Fast: "Ping all" / "Fastest" buttons
         val quickTestBar = view.findViewById<View>(R.id.quick_test_bar)
         if (select) {
             quickTestBar.isVisible = false
         } else {
+            view.findViewById<MaterialButton>(R.id.ping_current_button).setOnClickListener {
+                pingCurrentServer()
+            }
             view.findViewById<MaterialButton>(R.id.ping_all_button).setOnClickListener {
                 pingAllServers()
             }
@@ -217,6 +229,12 @@ class ConfigurationFragment @JvmOverloads constructor(
                 selectFastestServer()
             }
         }
+
+        // Гоппер VPN: карточка статуса. Состояние живёт в MainActivity,
+        // поэтому подписываемся на его statusListener и отписываемся
+        // в onDestroyView — иначе фрагмент остался бы висеть в памяти.
+        (activity as? MainActivity)?.statusListener = { updateStatusCard() }
+        updateStatusCard()
 
         groupPager.adapter = adapter
         groupPager.offscreenPageLimit = 2
@@ -282,6 +300,8 @@ class ConfigurationFragment @JvmOverloads constructor(
             GroupManager.removeListener(adapter)
             ProfileManager.removeListener(adapter)
         }
+
+        (activity as? MainActivity)?.statusListener = null
 
         super.onDestroy()
     }
@@ -1046,6 +1066,133 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     /**
+     * Гоппер VPN: обновление карточки статуса.
+     *
+     * Состояние подключения берём из [DataStore.serviceState] — его туда
+     * кладёт MainActivity на каждый чих сервиса. Имя и пинг сервера берём
+     * из профиля, на который указывает [DataStore.currentProfile].
+     */
+    fun updateStatusCard() {
+        val v = view ?: return
+        val ctx = context ?: return
+        val card = v.findViewById<View>(R.id.status_card) ?: return
+
+        // В режиме выбора профиля (ProfileSelectActivity) карточка лишняя —
+        // там и так открыт список, из которого выбирают.
+        if (select) {
+            card.isGone = true
+            return
+        }
+        card.isVisible = true
+
+        val state = DataStore.serviceState
+        val titleRes = when (state) {
+            BaseService.State.Connecting -> R.string.connecting
+            BaseService.State.Stopping -> R.string.stopping
+            BaseService.State.Connected -> R.string.status_card_connected
+            else -> R.string.status_card_disconnected
+        }
+
+        // Фон карточки — светлый зелёный (gopper_100) в любой теме, поэтому
+        // цвет точки берём не из атрибута темы, а напрямую: иначе в тёмной
+        // теме точки не видно на светлом фоне.
+        val dotColor = when (state) {
+            BaseService.State.Connecting, BaseService.State.Stopping ->
+                ContextCompat.getColor(ctx, R.color.gopper_400)
+            BaseService.State.Connected -> ctx.getColorAttr(R.attr.colorPrimary)
+            else -> ContextCompat.getColor(ctx, R.color.material_grey_600)
+        }
+
+        // Цвет круглой кнопки подключения: зелёный — можно подключать,
+        // красный — уже подключено, значит нажатие отключит.
+        if (!select) {
+            val connectButton = v.findViewById<MaterialButton>(R.id.connect_button)
+            connectButton.backgroundTintList = ColorStateList.valueOf(
+                when (state) {
+                    BaseService.State.Connected, BaseService.State.Stopping ->
+                        ContextCompat.getColor(ctx, R.color.material_red_500)
+                    BaseService.State.Connecting ->
+                        ContextCompat.getColor(ctx, R.color.gopper_400)
+                    else -> ctx.getColorAttr(R.attr.colorPrimary)
+                }
+            )
+            connectButton.contentDescription =
+                ctx.getText(if (state.canStop) R.string.stop else R.string.connect)
+        }
+
+        v.findViewById<TextView>(R.id.status_title).setText(titleRes)
+        v.findViewById<View>(R.id.status_dot).backgroundTintList =
+            ColorStateList.valueOf(dotColor)
+
+        // displayName() внутри зовёт requireBean() и умеет бросать, если
+        // конфиг профиля ещё не загружен. Тогда карточка покажет
+        // «сервер не выбран», вместо того чтобы уронить приложение.
+        val detail: String = try {
+            val profile = ProfileManager.getProfile(DataStore.currentProfile)
+            when {
+                profile == null -> getString(R.string.status_card_no_server)
+                profile.displayName().isBlank() -> getString(R.string.status_card_no_server)
+                // ping == 0 бывает, когда сервер ещё не проверяли
+                profile.ping > 0 -> getString(
+                    R.string.status_card_server_ping, profile.displayName(), profile.ping
+                )
+                else -> profile.displayName()
+            }
+        } catch (e: Exception) {
+            Logs.w(e)
+            getString(R.string.status_card_no_server)
+        }
+        v.findViewById<TextView>(R.id.status_detail).text = detail
+    }
+
+    /**
+     * Гоппер VPN: одиночный пинг выбранного сервера.
+     *
+     * В отличие от «Пинг всех» ничего не перебирает и не переключает выбор —
+     * просто меряет текущий сервер, пишет результат в базу (чтобы обновились
+     * и карточка, и список) и показывает его.
+     */
+    fun pingCurrentServer() {
+        if (DataStore.runningTest) {
+            snackbar(R.string.connection_test_running).show()
+            return
+        }
+        val profile = ProfileManager.getProfile(DataStore.currentProfile)
+        val name = profile?.let { runCatching { it.displayName() }.getOrNull() }
+        if (profile == null || name.isNullOrBlank()) {
+            snackbar(R.string.status_card_no_server).show()
+            return
+        }
+
+        runOnDefaultDispatcher {
+            val ping = try {
+                UrlTest().doTest(profile)
+            } catch (e: Exception) {
+                Logs.w(e)
+                -1
+            }
+            if (ping > 0) {
+                profile.status = 1
+                profile.ping = ping
+                try {
+                    ProfileManager.updateProfile(profile)
+                } catch (e: Exception) {
+                    Logs.w(e)
+                }
+            }
+            onMainDispatcher {
+                val ctx = context
+                if (ctx == null) return@onMainDispatcher
+                snackbar(
+                    if (ping > 0) ctx.getString(R.string.status_card_server_ping, name, ping)
+                    else ctx.getString(R.string.ping_current_failed, name)
+                ).show()
+                updateStatusCard()
+            }
+        }
+    }
+
+    /**
      * NekoBox Fast: "Ping all" - tests every server of every subscription.
      */
     fun pingAllServers() {
@@ -1058,6 +1205,8 @@ class ConfigurationFragment @JvmOverloads constructor(
                         R.string.ping_all_summary, tested.size, available, tested.size - available
                     )
                 ).show()
+                // пинг серверов обновился — карточке статуса тоже
+                updateStatusCard()
             }
         }
     }
@@ -1093,6 +1242,8 @@ class ConfigurationFragment @JvmOverloads constructor(
                 snackbar(
                     getString(R.string.fastest_switched, best.displayName(), best.ping)
                 ).show()
+                // выбрали другой сервер — карточка покажет новое имя и пинг
+                updateStatusCard()
             }
         }
     }
