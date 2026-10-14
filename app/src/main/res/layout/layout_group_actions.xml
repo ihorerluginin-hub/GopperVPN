@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   Строка действий текущей подписки на главном экране.
 
-  Слева кнопка «обновить все подписки», в центре название, справа три
-  кнопки подписки: настройки, URL-тест (спидометр), обновить подписку.
+  В центре название, справа три кнопки подписки: настройки, URL-тест
+  (спидометр), обновить подписку. Кнопка «обновить все подписки» уехала
+  отсюда в ряд кнопок под кнопкой подключения.
 
   Когда появится вертикальный аккордеон, эта же разметка переедет в
   заголовок каждой подписки — поэтому id здесь не привязаны к позиции.
@@ -16,18 +17,8 @@
     android:baselineAligned="false"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="4dp"
+    android:paddingStart="16dp"
     android:paddingEnd="4dp">
-
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/refresh_all_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/update_all_subscription"
-        android:focusable="true"
-        app:srcCompat="@drawable/ic_baseline_refresh_24"
-        app:tint="?attr/colorControlNormal" />
 
     <TextView
         android:id="@+id/group_actions_name"

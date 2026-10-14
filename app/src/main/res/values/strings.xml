@@ -598,9 +598,6 @@
 <string name="status_card_no_server">No server selected</string>
 <string name="status_card_server_ping">%1$s · %2$d ms</string>
 
-<!-- Гоппер VPN: одиночный пинг -->
-<string name="ping_current_server">Ping</string>
-<string name="ping_current_failed">%1$s did not answer</string>
 
 <!-- Гоппер VPN: общая сортировка и строка действий подписки -->
 <string name="sort_servers_by_delay">Sort servers by ping</string>

@@ -215,26 +215,13 @@ class ConfigurationFragment @JvmOverloads constructor(
             connectButton.setOnClickListener { (activity as? MainActivity)?.toggleService() }
         }
 
-        // NekoBox Fast: "Ping all" / "Fastest" buttons
+        // Ряд кнопок под кнопкой подключения: обновить все, пинг всех,
+        // самый быстрый. Отдельного «Пинга» для одного сервера больше нет.
         val quickTestBar = view.findViewById<View>(R.id.quick_test_bar)
         if (select) {
             quickTestBar.isVisible = false
         } else {
-            view.findViewById<MaterialButton>(R.id.ping_current_button).setOnClickListener {
-                pingCurrentServer()
-            }
-            view.findViewById<MaterialButton>(R.id.ping_all_button).setOnClickListener {
-                pingAllServers()
-            }
-            view.findViewById<MaterialButton>(R.id.fastest_button).setOnClickListener {
-                selectFastestServer()
-            }
-        }
-
-        // Гоппер VPN: строка действий текущей подписки.
-        view.findViewById<View>(R.id.group_actions).isVisible = !select
-        if (!select) {
-            view.findViewById<View>(R.id.refresh_all_button).setOnClickListener {
+            view.findViewById<MaterialButton>(R.id.refresh_all_button).setOnClickListener {
                 MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.confirm)
                     .setMessage(R.string.update_all_subscription)
                     .setPositiveButton(R.string.yes) { _, _ ->
@@ -247,6 +234,17 @@ class ConfigurationFragment @JvmOverloads constructor(
                     .setNegativeButton(R.string.no, null)
                     .show()
             }
+            view.findViewById<MaterialButton>(R.id.ping_all_button).setOnClickListener {
+                pingAllServers()
+            }
+            view.findViewById<MaterialButton>(R.id.fastest_button).setOnClickListener {
+                selectFastestServer()
+            }
+        }
+
+        // Гоппер VPN: строка действий текущей подписки.
+        view.findViewById<View>(R.id.group_actions).isVisible = !select
+        if (!select) {
             view.findViewById<View>(R.id.group_settings_button).setOnClickListener {
                 startActivity(Intent(requireContext(), GroupSettingsActivity::class.java).apply {
                     putExtra(GroupSettingsActivity.EXTRA_GROUP_ID, currentGroupIdOrZero())
@@ -1209,53 +1207,6 @@ class ConfigurationFragment @JvmOverloads constructor(
         v.findViewById<View>(R.id.group_url_test_button).isVisible = real
         v.findViewById<View>(R.id.group_update_button).isVisible =
             group?.type == GroupType.SUBSCRIPTION
-    }
-
-    /**
-     * Гоппер VPN: одиночный пинг выбранного сервера.
-     *
-     * В отличие от «Пинг всех» ничего не перебирает и не переключает выбор —
-     * просто меряет текущий сервер, пишет результат в базу (чтобы обновились
-     * и карточка, и список) и показывает его.
-     */
-    fun pingCurrentServer() {
-        if (DataStore.runningTest) {
-            snackbar(R.string.connection_test_running).show()
-            return
-        }
-        val profile = ProfileManager.getProfile(DataStore.currentProfile)
-        val name = profile?.let { runCatching { it.displayName() }.getOrNull() }
-        if (profile == null || name.isNullOrBlank()) {
-            snackbar(R.string.status_card_no_server).show()
-            return
-        }
-
-        runOnDefaultDispatcher {
-            val ping = try {
-                UrlTest().doTest(profile)
-            } catch (e: Exception) {
-                Logs.w(e)
-                -1
-            }
-            if (ping > 0) {
-                profile.status = 1
-                profile.ping = ping
-                try {
-                    ProfileManager.updateProfile(profile)
-                } catch (e: Exception) {
-                    Logs.w(e)
-                }
-            }
-            onMainDispatcher {
-                val ctx = context
-                if (ctx == null) return@onMainDispatcher
-                snackbar(
-                    if (ping > 0) ctx.getString(R.string.status_card_server_ping, name, ping)
-                    else ctx.getString(R.string.ping_current_failed, name)
-                ).show()
-                updateStatusCard()
-            }
-        }
     }
 
     /**
