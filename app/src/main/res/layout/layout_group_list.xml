@@ -122,6 +122,13 @@
         app:tabTextColor="?tabTextColor"
         app:tabUnboundedRipple="false" />
 
+    <!-- Гоппер VPN: строка действий текущей подписки. Позже переедет
+         в заголовок каждой подписки, когда появится вертикальный аккордеон. -->
+    <include
+        layout="@layout/layout_group_actions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/group_pager"
         android:layout_width="match_parent"

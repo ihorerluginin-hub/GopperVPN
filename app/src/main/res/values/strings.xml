@@ -401,7 +401,7 @@
     <string name="hysteria_connection_receive_window">QUIC Connection Receive Window</string>
     <string name="hysteria_disable_mtu_discovery">Disable Path MTU Discovery</string>
     <string name="group_order">Order</string>
-    <string name="group_order_origin">Origin</string>
+    <string name="group_order_origin">As in global settings</string>
     <string name="group_order_by_name">By Name</string>
     <string name="group_order_by_delay">By Delay</string>
     <string name="plugin_exists_but_on_shit_system">Profile %s requires the %s plugin, but your
@@ -601,4 +601,11 @@
 <!-- Гоппер VPN: одиночный пинг -->
 <string name="ping_current_server">Ping</string>
 <string name="ping_current_failed">%1$s did not answer</string>
+
+<!-- Гоппер VPN: общая сортировка и строка действий подписки -->
+<string name="sort_servers_by_delay">Sort servers by ping</string>
+<string name="sort_servers_by_delay_sum">Fastest servers first. Each subscription can override this in its own settings.</string>
+<string name="subscription_actions">Subscription actions</string>
+<string name="url_test">URL test</string>
+<string name="update_subscription">Update subscription</string>
 </resources>

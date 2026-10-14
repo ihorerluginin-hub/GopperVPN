@@ -64,6 +64,11 @@ object Key {
     const val TUN_IMPLEMENTATION = "tunImplementation"
     const val PROFILE_TRAFFIC_STATISTICS = "profileTrafficStatistics"
 
+    // Гоппер VPN: общая настройка сортировки серверов по пингу.
+    // Подписка может переопределить её через groupOrder (BY_NAME/BY_DELAY),
+    // а GroupOrder.ORIGIN означает «следовать этой общей настройке».
+    const val SORT_SERVERS_BY_DELAY = "sortServersByDelay"
+
     const val PROFILE_DIRTY = "profileDirty"
     const val PROFILE_ID = "profileId"
     const val PROFILE_NAME = "profileName"

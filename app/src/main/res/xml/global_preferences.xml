@@ -72,6 +72,12 @@
             app:summary="@string/always_show_address_sum"
             app:title="@string/always_show_address" />
         <SwitchPreference
+            app:defaultValue="false"
+            app:icon="@drawable/ic_baseline_speed_24"
+            app:key="sortServersByDelay"
+            app:summary="@string/sort_servers_by_delay_sum"
+            app:title="@string/sort_servers_by_delay" />
+        <SwitchPreference
             app:icon="@drawable/ic_device_data_usage"
             app:key="meteredNetwork"
             app:summary="@string/metered_summary"

@@ -193,7 +193,7 @@
 <string name="group_order">Сортировка</string>
 <string name="group_order_by_delay">По задержке</string>
 <string name="group_order_by_name">По имени</string>
-<string name="group_order_origin">По источнику</string>
+<string name="group_order_origin">Как в общих настройках</string>
 <string name="group_settings">Настройки группы</string>
 <string name="group_show_diff">Сравнить группы</string>
 <string name="group_status_empty">Пустая группа</string>
@@ -513,4 +513,11 @@
 <!-- Гоппер VPN: одиночный пинг -->
 <string name="ping_current_server">Пинг</string>
 <string name="ping_current_failed">%1$s не отвечает</string>
+
+<!-- Гоппер VPN: общая сортировка и строка действий подписки -->
+<string name="sort_servers_by_delay">Сортировать серверы по пингу</string>
+<string name="sort_servers_by_delay_sum">Сначала быстрые. У каждой подписки можно переопределить это в её настройках.</string>
+<string name="subscription_actions">Действия с подпиской</string>
+<string name="url_test">URL-тест</string>
+<string name="update_subscription">Обновить подписку</string>
 </resources>

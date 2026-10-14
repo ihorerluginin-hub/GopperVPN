@@ -151,6 +151,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         ) {
             if (adapter.groupList.size > position) {
                 DataStore.selectedGroup = adapter.groupList[position].id
+                updateGroupActions()
             }
         }
     }
@@ -229,6 +230,35 @@ class ConfigurationFragment @JvmOverloads constructor(
                 selectFastestServer()
             }
         }
+
+        // Гоппер VPN: строка действий текущей подписки.
+        view.findViewById<View>(R.id.group_actions).isVisible = !select
+        if (!select) {
+            view.findViewById<View>(R.id.refresh_all_button).setOnClickListener {
+                MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.confirm)
+                    .setMessage(R.string.update_all_subscription)
+                    .setPositiveButton(R.string.yes) { _, _ ->
+                        runOnDefaultDispatcher {
+                            SagerDatabase.groupDao.allGroups()
+                                .filter { it.type == GroupType.SUBSCRIPTION }
+                                .forEach { GroupUpdater.startUpdate(it, true) }
+                        }
+                    }
+                    .setNegativeButton(R.string.no, null)
+                    .show()
+            }
+            view.findViewById<View>(R.id.group_settings_button).setOnClickListener {
+                startActivity(Intent(requireContext(), GroupSettingsActivity::class.java).apply {
+                    putExtra(GroupSettingsActivity.EXTRA_GROUP_ID, currentGroupIdOrZero())
+                })
+            }
+            view.findViewById<View>(R.id.group_url_test_button).setOnClickListener { urlTest() }
+            view.findViewById<View>(R.id.group_update_button).setOnClickListener {
+                val group = currentGroupOrNull() ?: return@setOnClickListener
+                runOnDefaultDispatcher { GroupUpdater.startUpdate(group, true) }
+            }
+        }
+        updateGroupActions()
 
         // Гоппер VPN: карточка статуса. Состояние живёт в MainActivity,
         // поэтому подписываемся на его statusListener и отписываемся
@@ -1143,6 +1173,42 @@ class ConfigurationFragment @JvmOverloads constructor(
             getString(R.string.status_card_no_server)
         }
         v.findViewById<TextView>(R.id.status_detail).text = detail
+
+        if (!select) updateGroupActions()
+    }
+
+    /**
+     * Гоппер VPN: текущая подписка из уже загруженного списка.
+     *
+     * Берём именно из adapter.groupList, а не через DataStore.currentGroup():
+     * тот ходит в базу и попутно создаёт группу «Без группы», если её нет.
+     * Здесь список уже в памяти, поэтому лишних запросов и побочных эффектов.
+     */
+    fun currentGroupOrNull(): ProxyGroup? {
+        if (!::adapter.isInitialized) return null
+        val id = DataStore.selectedGroup
+        return adapter.groupList.firstOrNull { it.id == id }
+    }
+
+    fun currentGroupIdOrZero(): Long = currentGroupOrNull()?.id ?: 0L
+
+    /**
+     * Гоппер VPN: подпись строки действий и доступность кнопок.
+     * У группы «Без группы» нет ни настроек, ни подписки для обновления,
+     * поэтому часть кнопок там прячется.
+     */
+    fun updateGroupActions() {
+        val v = view ?: return
+        val nameView = v.findViewById<TextView>(R.id.group_actions_name) ?: return
+        val group = currentGroupOrNull()
+        nameView.text = runCatching { group?.displayName() }.getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?: getString(R.string.menu_configuration)
+        val real = group?.ungrouped == false
+        v.findViewById<View>(R.id.group_settings_button).isVisible = real
+        v.findViewById<View>(R.id.group_url_test_button).isVisible = real
+        v.findViewById<View>(R.id.group_update_button).isVisible =
+            group?.type == GroupType.SUBSCRIPTION
     }
 
     /**
@@ -1774,16 +1840,22 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             fun reloadProfiles() {
                 var newProfiles = SagerDatabase.proxyDao.getByGroup(proxyGroup.id)
-                when (proxyGroup.order) {
-                    GroupOrder.BY_NAME -> {
-                        newProfiles = newProfiles.sortedBy { it.displayName() }
 
-                    }
-
-                    GroupOrder.BY_DELAY -> {
-                        newProfiles =
-                            newProfiles.sortedBy { if (it.status == 1) it.ping else 114514 }
-                    }
+                // Гоппер VPN: GroupOrder.ORIGIN теперь означает «следовать
+                // общей настройке sortServersByDelay», а BY_NAME и BY_DELAY
+                // остаются переопределением для конкретной подписки.
+                // Выключенная сортировка по пингу оставляет исходный порядок
+                // — ровно то, что ORIGIN делал раньше.
+                val sortByDelay = when (proxyGroup.order) {
+                    GroupOrder.BY_DELAY -> true
+                    GroupOrder.BY_NAME -> false
+                    else -> DataStore.sortServersByDelay
+                }
+                if (sortByDelay) {
+                    // 114514 — заглушка: недоступные серверы уходят в конец,
+                    // иначе нулевой пинг встал бы первым.
+                    newProfiles =
+                        newProfiles.sortedBy { if (it.status == 1) it.ping else 114514 }
                 }
 
                 configurationList.clear()
