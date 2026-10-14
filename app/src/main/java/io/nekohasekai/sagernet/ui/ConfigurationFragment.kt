@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.os.SystemClock
@@ -32,6 +33,7 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceDataStore
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.graphics.ColorUtils
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -209,8 +211,9 @@ class ConfigurationFragment @JvmOverloads constructor(
         ProfileManager.addListener(adapter)
         GroupManager.addListener(adapter)
 
-        // Гоппер VPN: круглая кнопка подключения сверху.
-        val connectButton = view.findViewById<MaterialButton>(R.id.connect_button)
+        // Гоппер VPN: круглая кнопка подключения сверху. Это FrameLayout,
+        // а не MaterialButton: объёмный вид требует градиентной заливки.
+        val connectButton = view.findViewById<View>(R.id.connect_button)
         connectButton.isVisible = !select
         if (!select) {
             connectButton.setOnClickListener { (activity as? MainActivity)?.toggleService() }
@@ -1118,7 +1121,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         // подключён — зелёный. Обычная логика «зелёный значит можно
         // подключать» тут вводила в заблуждение: кнопка меняла цвет
         // нажатием, а не состоянием.
-        v.findViewById<MaterialButton>(R.id.connect_button)?.let { connectButton ->
+        v.findViewById<View>(R.id.connect_button)?.let { connectButton ->
             val buttonColor = when (state) {
                 BaseService.State.Connected ->
                     ctx.getColorAttr(R.attr.colorPrimary)
@@ -1127,12 +1130,23 @@ class ConfigurationFragment @JvmOverloads constructor(
                 else ->
                     ContextCompat.getColor(ctx, R.color.material_red_500)
             }
-            connectButton.backgroundTintList = ColorStateList.valueOf(buttonColor)
+
+            // Объём: заливка светлее сверху и темнее снизу, плюс тень
+            // из android:elevation в разметке. Конструктор с двумя
+            // цветами, а не setGradient(): тот появился только в API 24,
+            // а minSdk в приложении 21.
+            connectButton.background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(
+                    ColorUtils.blendARGB(buttonColor, Color.WHITE, 0.22f),
+                    ColorUtils.blendARGB(buttonColor, Color.BLACK, 0.16f),
+                ),
+            ).apply { shape = GradientDrawable.OVAL }
 
             // Стрелка на знаке лежит поверх щита, поэтому её видно даже
-            // когда она того же цвета, что кругка: красим её так же,
-            // как кнопку, чтобы знак менялся вместе с ней.
-            (connectButton.icon as? LayerDrawable)?.let { layers ->
+            // когда она того же цвета, что кнопка: красим её так же,
+            // чтобы знак менялся вместе с кнопкой.
+            (v.findViewById<ImageView>(R.id.connect_icon)?.drawable as? LayerDrawable)?.let { layers ->
                 if (layers.numberOfLayers > 1) {
                     layers.getDrawable(1)?.mutate()?.setTint(buttonColor)
                 }

@@ -39,23 +39,20 @@
             <!-- Круглая кнопка подключения. 190dp ≈ 3 см: в Android 1dp = 1/160 дюйма,
                  так что 3 см = 3/2,54*160 ≈ 189dp. Стоит ровно по центру экрана.
 
-                 Это MaterialButton, а не ServiceButton (FAB): на таком размере FAB
-                 пересчитывал размер значка по своим правилам и рисовал его мимо
-                 кнопки. Здесь размер иконки задан явно через app:iconSize.
+                 Это FrameLayout, а не MaterialButton: объёмной кнопке нужна
+                 градиентная заливка, а app:backgroundTint красит её целиком и
+                 переход просто исчезает. Фон-овал с градиентом задаётся из кода
+                 (ConfigurationFragment.updateConnectionUi), здесь только тень
+                 и отклик на нажатие.
 
                  Внутри — щит со стрелкой из иконки приложения
                  (drawable/ic_app_mark.xml), без её синей подложки и без
-                 чёрточек под щитом: на кнопке подложкой служит её
-                 собственный фон — красный, пока VPN не подключён,
-                 зелёный, когда подключён.
+                 чёрточек под щитом: подложкой служит сама кнопка — красная,
+                 пока VPN не подключён, зелёная, когда подключён.
 
-                 app:iconTint="@null" обязателен: у стиля кнопки есть свой
-                 тинт по умолчанию, а он чёрный — знак с его цветами
-                 превратился бы в чёрный силуэт. С app:iconTint щит
-                 рисуется как есть.
-
-                 Пустой android:text обязателен — иначе значок прижмётся к краю. -->
-            <com.google.android.material.button.MaterialButton
+                 android:elevation даёт тень по контуру овала, поэтому кнопка
+                 читается как выпуклая, а не нарисованная. -->
+            <FrameLayout
                 android:id="@+id/connect_button"
                 android:layout_width="190dp"
                 android:layout_height="190dp"
@@ -64,17 +61,21 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="12dp"
                 android:layout_marginBottom="10dp"
+                android:clickable="true"
                 android:contentDescription="@string/connect"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text=""
-                app:backgroundTint="?fabColorBackground"
-                app:cornerRadius="95dp"
-                app:icon="@drawable/ic_app_mark"
-                app:iconGravity="textStart"
-                app:iconPadding="0dp"
-                app:iconSize="120dp"
-                app:iconTint="@null" />
+                android:elevation="14dp"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <ImageView
+                    android:id="@+id/connect_icon"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_app_mark" />
+
+            </FrameLayout>
 
             <!-- Ряд кнопок под кнопкой подключения: обновить все подписки,
                  пинг всех (только спидометр, без надписи), самый быстрый. -->
