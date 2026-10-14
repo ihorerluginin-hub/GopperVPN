@@ -14,6 +14,7 @@ import com.google.android.material.bottomappbar.BottomAppBar
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.database.ProfileManager
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.ui.MainActivity
 import kotlinx.coroutines.Dispatchers
@@ -80,6 +81,33 @@ class StatsBar @JvmOverloads constructor(
         TooltipCompat.setTooltipText(this, text)
     }
 
+    /**
+     * Гоппер VPN: нижняя панель показывает выбранный сервер и его пинг.
+     *
+     * Название сервера убрано из системного уведомления, чтобы оно не
+     * дублировалось; здесь у него место рядом с задержкой. Пока VPN не
+     * подключён, строка статуса показывает состояние подключения, поэтому
+     * функция молча выходит.
+     */
+    fun showCurrentServer() {
+        if (!DataStore.serviceState.connected) return
+        val ctx = context ?: return
+        runOnDefaultDispatcher {
+            val profile = ProfileManager.getProfile(DataStore.currentProfile)
+            val name = profile?.let { runCatching { it.displayName() }.getOrNull() }
+            val ping = profile?.ping ?: 0
+            onMainDispatcher {
+                setStatus(
+                    when {
+                        name.isNullOrBlank() -> ctx.getString(R.string.status_card_no_server)
+                        ping > 0 -> ctx.getString(R.string.status_card_server_ping, name, ping)
+                        else -> name
+                    }
+                )
+            }
+        }
+    }
+
     fun changeState(state: BaseService.State) {
         val activity = context as MainActivity
         fun postWhenStarted(what: () -> Unit) = activity.lifecycleScope.launch(Dispatchers.Main) {
@@ -89,7 +117,9 @@ class StatsBar @JvmOverloads constructor(
         if ((state == BaseService.State.Connected).also { hideOnScroll = it }) {
             postWhenStarted {
                 if (allowShow) performShow()
-                setStatus(app.getText(R.string.vpn_connected))
+                // Гоппер VPN: название сервера убрано из системного уведомления,
+                // здесь оно показывается вместе с пингом
+                showCurrentServer()
             }
         } else {
             postWhenStarted {
@@ -127,18 +157,27 @@ class StatsBar @JvmOverloads constructor(
         isEnabled = false
         setStatus(app.getText(R.string.connection_test_testing))
         runOnDefaultDispatcher {
+            // Гоппер VPN: запоминаем имя сервера заранее, результат проверки
+            // показываем вместе с ним, а не голым числом миллисекунд
+            val name = runCatching {
+                ProfileManager.getProfile(DataStore.currentProfile)?.displayName()
+            }.getOrNull().orEmpty()
             try {
                 val elapsed = activity.urlTest()
                 onMainDispatcher {
                     isEnabled = true
                     setStatus(
-                        app.getString(
-                            if (DataStore.connectionTestURL.startsWith("https://")) {
-                                R.string.connection_test_available
-                            } else {
-                                R.string.connection_test_available_http
-                            }, elapsed
-                        )
+                        if (name.isNotBlank()) {
+                            app.getString(R.string.status_card_server_ping, name, elapsed)
+                        } else {
+                            app.getString(
+                                if (DataStore.connectionTestURL.startsWith("https://")) {
+                                    R.string.connection_test_available
+                                } else {
+                                    R.string.connection_test_available_http
+                                }, elapsed
+                            )
+                        }
                     )
                 }
 

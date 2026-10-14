@@ -358,7 +358,10 @@ class BaseService {
             data.changeState(State.Connecting)
             runOnMainDispatcher {
                 try {
-                    data.notification = createNotification(ServiceNotification.genTitle(profile))
+                    // Гоппер VPN: заголовок уведомления больше не содержит
+                    // название сервера — его показывает нижняя панель в
+                    // приложении вместе с пингом
+                    data.notification = createNotification(getString(R.string.app_name))
 
                     Executable.killAll()    // clean up old processes
                     preInit()

@@ -96,7 +96,8 @@ class NativeInterface : BoxPlatformInterface, NB4AInterface {
                 data.proxy?.apply {
                     looper?.selectMain(id)
                     displayProfileName = ServiceNotification.genTitle(ent)
-                    data.notification?.postNotificationTitle(displayProfileName)
+                    // Гоппер VPN: заголовок уведомления от сервера не зависит,
+                    // поэтому переподнимать его при смене сервера не нужно
                 }
                 // post binder
                 data.binder.broadcast { b ->

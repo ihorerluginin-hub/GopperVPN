@@ -428,6 +428,8 @@ class MainActivity : ThemedActivity(),
         val old = DataStore.selectedProxy
         DataStore.selectedProxy = id
         DataStore.currentProfile = id
+        // Гоппер VPN: нижняя панель показывает имя сервера, обновляем её
+        binding.stats.showCurrentServer()
         notifyStatusChanged()
         runOnDefaultDispatcher {
             ProfileManager.postUpdate(old, true)
