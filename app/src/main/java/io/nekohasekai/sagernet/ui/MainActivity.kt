@@ -60,15 +60,26 @@ class MainActivity : ThemedActivity(),
     // повторный клик по тому же пункту не пересоздавал фрагмент заново.
     private var currentDestinationId: Int = R.id.nav_configuration
 
-    // Гоппер VPN: карточка статуса на главном экране живёт во фрагменте,
-    // а состояние подключения — здесь. Фрагмент подписывается на это
-    // свойство и обновляет карточку при смене состояния или сервера.
-    // Держим именно функцию, а не Listener, чтобы фрагменту не пришлось
-    // реализовывать интерфейс и отписываться по ссылке.
+    // Гоппер VPN: круглая кнопка подключения и строка действий подписки
+    // живут во фрагменте, а состояние подключения — здесь. Фрагмент
+    // подписывается на это свойство и обновляет кнопки при смене состояния
+    // или сервера. Держим именно функцию, а не Listener, чтобы фрагменту
+    // не пришлось реализовывать интерфейс и отписываться по ссылке.
     var statusListener: (() -> Unit)? = null
 
     fun notifyStatusChanged() {
         statusListener?.invoke()
+    }
+
+    /**
+     * Гоппер VPN: обновить нижнюю панель — имя выбранного сервера и пинг.
+     *
+     * Вызывается фрагментом после проверки пинга и выбора самого быстрого
+     * сервера: обе операции меняют задержку, а StatsBar обновляется только
+     * по событиям сервиса.
+     */
+    fun updateStatsBar() {
+        binding.stats.showCurrentServer()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -429,7 +440,7 @@ class MainActivity : ThemedActivity(),
         DataStore.selectedProxy = id
         DataStore.currentProfile = id
         // Гоппер VPN: нижняя панель показывает имя сервера, обновляем её
-        binding.stats.showCurrentServer()
+        updateStatsBar()
         notifyStatusChanged()
         runOnDefaultDispatcher {
             ProfileManager.postUpdate(old, true)

@@ -125,21 +125,18 @@
 
         </LinearLayout>
 
-        <!-- Подвижная часть: карточка статуса, вкладки, строка действий,
-             список серверов. Едет вверх вместе с блоком кнопок. -->
+        <!-- Подвижная часть: вкладки, строка действий, список серверов.
+             Едет вверх вместе с блоком кнопок.
+
+             Раньше здесь была карточка статуса с состоянием подключения и
+             выбранным сервером. Она удалена: эти данные показывает нижняя
+             панель StatsBar, а дубль под кнопками только занимал место. -->
         <LinearLayout
             android:id="@+id/bottom_block"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="vertical">
-
-            <!-- Гоппер VPN: карточка статуса. Скрывается, когда фрагмент открыт
-                 для выбора профиля, — там она не нужна. -->
-            <include
-                layout="@layout/layout_status_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/group_tab"

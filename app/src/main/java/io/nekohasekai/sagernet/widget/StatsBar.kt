@@ -99,8 +99,8 @@ class StatsBar @JvmOverloads constructor(
             onMainDispatcher {
                 setStatus(
                     when {
-                        name.isNullOrBlank() -> ctx.getString(R.string.status_card_no_server)
-                        ping > 0 -> ctx.getString(R.string.status_card_server_ping, name, ping)
+                        name.isNullOrBlank() -> ctx.getString(R.string.server_not_selected)
+                        ping > 0 -> ctx.getString(R.string.server_name_ping, name, ping)
                         else -> name
                     }
                 )
@@ -168,7 +168,7 @@ class StatsBar @JvmOverloads constructor(
                     isEnabled = true
                     setStatus(
                         if (name.isNotBlank()) {
-                            app.getString(R.string.status_card_server_ping, name, elapsed)
+                            app.getString(R.string.server_name_ping, name, elapsed)
                         } else {
                             app.getString(
                                 if (DataStore.connectionTestURL.startsWith("https://")) {

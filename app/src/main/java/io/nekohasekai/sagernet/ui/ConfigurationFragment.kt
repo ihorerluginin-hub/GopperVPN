@@ -243,11 +243,11 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
         updateGroupActions()
 
-        // Гоппер VPN: карточка статуса. Состояние живёт в MainActivity,
-        // поэтому подписываемся на его statusListener и отписываемся
-        // в onDestroyView — иначе фрагмент остался бы висеть в памяти.
-        (activity as? MainActivity)?.statusListener = { updateStatusCard() }
-        updateStatusCard()
+        // Гоппер VPN: состояние подключения живёт в MainActivity, поэтому
+        // подписываемся на его statusListener и отписываемся в onDestroyView —
+        // иначе фрагмент остался бы висеть в памяти.
+        (activity as? MainActivity)?.statusListener = { updateConnectionUi() }
+        updateConnectionUi()
 
         // первая страница могла появиться до того, как отработал onPageScrolled
         groupPager.post { attachToCurrentPage() }
@@ -1084,47 +1084,27 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     /**
-     * Гоппер VPN: обновление карточки статуса.
+     * Гоппер VPN: обновление верхних кнопок по состоянию подключения.
      *
-     * Состояние подключения берём из [DataStore.serviceState] — его туда
-     * кладёт MainActivity на каждый чих сервиса. Имя и пинг сервера берём
-     * из профиля, на который указывает [DataStore.currentProfile].
+     * Состояние берём из [DataStore.serviceState] — его туда кладёт
+     * MainActivity на каждый чих сервиса.
+     *
+     * Раньше здесь же обновлялась карточка статуса под рядом кнопок.
+     * Она удалена: состояние подключения и выбранный сервер с пингом
+     * показывает нижняя панель (StatsBar), так что карточка была дублем.
      */
-    fun updateStatusCard() {
+    fun updateConnectionUi() {
         val v = view ?: return
         val ctx = context ?: return
-        val card = v.findViewById<View>(R.id.status_card) ?: return
-
-        // В режиме выбора профиля (ProfileSelectActivity) карточка лишняя —
-        // там и так открыт список, из которого выбирают.
-        if (select) {
-            card.isGone = true
-            return
-        }
-        card.isVisible = true
+        // В режиме выбора профиля (ProfileSelectActivity) круглой кнопки
+        // подключения и строки действий нет — обновлять нечего.
+        if (select) return
 
         val state = DataStore.serviceState
-        val titleRes = when (state) {
-            BaseService.State.Connecting -> R.string.connecting
-            BaseService.State.Stopping -> R.string.stopping
-            BaseService.State.Connected -> R.string.status_card_connected
-            else -> R.string.status_card_disconnected
-        }
-
-        // Фон карточки — светлый зелёный (gopper_100) в любой теме, поэтому
-        // цвет точки берём не из атрибута темы, а напрямую: иначе в тёмной
-        // теме точки не видно на светлом фоне.
-        val dotColor = when (state) {
-            BaseService.State.Connecting, BaseService.State.Stopping ->
-                ContextCompat.getColor(ctx, R.color.gopper_400)
-            BaseService.State.Connected -> ctx.getColorAttr(R.attr.colorPrimary)
-            else -> ContextCompat.getColor(ctx, R.color.material_grey_600)
-        }
 
         // Цвет круглой кнопки подключения: зелёный — можно подключать,
         // красный — уже подключено, значит нажатие отключит.
-        if (!select) {
-            val connectButton = v.findViewById<MaterialButton>(R.id.connect_button)
+        v.findViewById<MaterialButton>(R.id.connect_button)?.let { connectButton ->
             connectButton.backgroundTintList = ColorStateList.valueOf(
                 when (state) {
                     BaseService.State.Connected, BaseService.State.Stopping ->
@@ -1138,31 +1118,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 ctx.getText(if (state.canStop) R.string.stop else R.string.connect)
         }
 
-        v.findViewById<TextView>(R.id.status_title).setText(titleRes)
-        v.findViewById<View>(R.id.status_dot).backgroundTintList =
-            ColorStateList.valueOf(dotColor)
-
-        // displayName() внутри зовёт requireBean() и умеет бросать, если
-        // конфиг профиля ещё не загружен. Тогда карточка покажет
-        // «сервер не выбран», вместо того чтобы уронить приложение.
-        val detail: String = try {
-            val profile = ProfileManager.getProfile(DataStore.currentProfile)
-            when {
-                profile == null -> getString(R.string.status_card_no_server)
-                profile.displayName().isBlank() -> getString(R.string.status_card_no_server)
-                // ping == 0 бывает, когда сервер ещё не проверяли
-                profile.ping > 0 -> getString(
-                    R.string.status_card_server_ping, profile.displayName(), profile.ping
-                )
-                else -> profile.displayName()
-            }
-        } catch (e: Exception) {
-            Logs.w(e)
-            getString(R.string.status_card_no_server)
-        }
-        v.findViewById<TextView>(R.id.status_detail).text = detail
-
-        if (!select) updateGroupActions()
+        updateGroupActions()
     }
 
     /**
@@ -1295,8 +1251,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                         R.string.ping_all_summary, tested.size, available, tested.size - available
                     )
                 ).show()
-                // пинг серверов обновился — карточке статуса тоже
-                updateStatusCard()
+                // пинг серверов обновился — нижняя панель покажет новые значения
+                (activity as? MainActivity)?.updateStatsBar()
+                updateConnectionUi()
             }
         }
     }
@@ -1332,8 +1289,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                 snackbar(
                     getString(R.string.fastest_switched, best.displayName(), best.ping)
                 ).show()
-                // выбрали другой сервер — карточка покажет новое имя и пинг
-                updateStatusCard()
+                // выбрали другой сервер — нижняя панель покажет новое имя и пинг
+                (activity as? MainActivity)?.updateStatsBar()
+                updateConnectionUi()
             }
         }
     }
