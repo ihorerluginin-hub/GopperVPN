@@ -152,6 +152,9 @@ class ConfigurationFragment @JvmOverloads constructor(
             if (adapter.groupList.size > position) {
                 DataStore.selectedGroup = adapter.groupList[position].id
                 updateGroupActions()
+                resetCollapse()
+                // сворачивание вешаем на список уже показанной страницы
+                attachToCurrentPage()
             }
         }
     }
@@ -264,6 +267,9 @@ class ConfigurationFragment @JvmOverloads constructor(
         (activity as? MainActivity)?.statusListener = { updateStatusCard() }
         updateStatusCard()
 
+        // первая страница могла появиться до того, как отработал onPageScrolled
+        groupPager.post { attachToCurrentPage() }
+
         groupPager.adapter = adapter
         groupPager.offscreenPageLimit = 2
 
@@ -330,6 +336,8 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
 
         (activity as? MainActivity)?.statusListener = null
+
+        detachCollapseOnScroll()
 
         super.onDestroy()
     }
@@ -1182,6 +1190,65 @@ class ConfigurationFragment @JvmOverloads constructor(
      * тот ходит в базу и попутно создаёт группу «Без группы», если её нет.
      * Здесь список уже в памяти, поэтому лишних запросов и побочных эффектов.
      */
+    /**
+     * Гоппер VPN: увести верхние кнопки при прокрутке списка серверов.
+     *
+     * Штатный AppBarLayout не годится: ViewPager2 перехватывает вложенный
+     * скролл, до CoordinatorLayout он не доходит, а ручной вызов
+     * AppBarLayout.Behavior.onNestedScroll ответа не дал — проверено на
+     * устройстве. Поэтому смещение считаем сами: блок кнопок и всё, что под
+     * ним, едут вверх на одну и ту же величину, поэтому список подтягивается
+     * без дыры, а панель с шестерёнкой остаётся на месте (у неё elevation).
+     */
+    private var collapseListener: RecyclerView.OnScrollListener? = null
+
+    private fun attachCollapseOnScroll(listView: RecyclerView) {
+        collapseListener?.let { listView.removeOnScrollListener(it) }
+        val listener = object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                if (dy == 0) return
+                val root = view ?: return
+                val block = root.findViewById<View>(R.id.top_buttons) ?: return
+                val below = root.findViewById<View>(R.id.bottom_block) ?: return
+                val max = block.height
+                if (max <= 0) return
+                // dy > 0 — список прокрутился вверх, блок сворачивается
+                val offset = (collapseOffset + dy).coerceIn(0, max)
+                if (offset == collapseOffset) return
+                collapseOffset = offset
+                val shift = -offset.toFloat()
+                block.translationY = shift
+                below.translationY = shift
+            }
+        }
+        listView.addOnScrollListener(listener)
+        collapseListener = listener
+    }
+
+    private var collapseOffset = 0
+
+    private fun detachCollapseOnScroll() {
+        collapseListener?.let {
+            getCurrentGroupFragment()?.safeListView?.removeOnScrollListener(it)
+        }
+        collapseListener = null
+    }
+
+    /** Гоппер VPN: повесить сворачивание на список текущей подписки. */
+    private fun attachToCurrentPage() {
+        groupPager.post {
+            getCurrentGroupFragment()?.safeListView?.let { attachCollapseOnScroll(it) }
+        }
+    }
+
+    /** Гоппер VPN: вернуть блок кнопок на место, например при смене подписки. */
+    private fun resetCollapse() {
+        collapseOffset = 0
+        val root = view ?: return
+        root.findViewById<View>(R.id.top_buttons)?.translationY = 0f
+        root.findViewById<View>(R.id.bottom_block)?.translationY = 0f
+    }
+
     fun currentGroupOrNull(): ProxyGroup? {
         if (!::adapter.isInitialized) return null
         val id = DataStore.selectedGroup
@@ -1439,6 +1506,12 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         lateinit var layoutManager: LinearLayoutManager
         lateinit var configurationListView: RecyclerView
+
+        // configurationListView инициализируется в onViewCreated, а страница
+        // может быть ещё не создана. :: lateinit.isInitialized работает только
+        // внутри своего класса, поэтому безопасный доступ живёт здесь.
+        val safeListView: RecyclerView?
+            get() = if (::configurationListView.isInitialized) configurationListView else null
 
         val select by lazy {
             try {

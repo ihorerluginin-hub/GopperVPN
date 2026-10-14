@@ -1,146 +1,176 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   Главный экран «Гоппер VPN».
 
-  Порядок сверху вниз: панель, круглая кнопка подключения (3 см) ровно
-  по центру, один ряд кнопок под ней, карточка статуса, вкладки подписок,
-  строка действий подписки, список серверов.
+  Сворачивание верхних кнопок сделано вручную, без AppBarLayout:
+  ViewPager2 перехватывает вложенный скролл, и штатные scroll-флаги
+  CoordinatorLayout не срабатывают — проверено на устройстве. Поэтому
+  при прокрутке списка блок top_buttons и всё, что под ним
+  (bottom_block), сдвигаются вверх на одинаковую величину.
 
-  Ряд кнопок: обновить все подписки, пинг всех (спидометр), самый быстрый.
-  Отдельной кнопки «Пинг» для одного сервера больше нет.
+  Панель с названием и шестерёнкой не двигается: у неё elevation 4dp,
+  поэтому уезжающий блок уходит под неё, а не поверх.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinator_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".ui.ConfigurationFragment">
 
-    <include
-        layout="@layout/layout_appbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <!-- Круглая кнопка подключения. 190dp ≈ 3 см: в Android 1dp = 1/160 дюйма,
-         так что 3 см = 3/2,54*160 ≈ 189dp. Стоит ровно по центру экрана.
-
-         Это MaterialButton, а не ServiceButton (FAB): на таком размере FAB
-         пересчитывал размер значка по своим правилам и рисовал его мимо
-         кнопки. Здесь размер иконки задан явно через app:iconSize.
-         Пустой android:text обязателен — иначе значок прижмётся к краю. -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/connect_button"
-        android:layout_width="190dp"
-        android:layout_height="190dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="12dp"
-        android:layout_marginBottom="10dp"
-        android:contentDescription="@string/connect"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:text=""
-        app:backgroundTint="?fabColorBackground"
-        app:cornerRadius="95dp"
-        app:icon="@drawable/ic_power_24"
-        app:iconGravity="textStart"
-        app:iconPadding="0dp"
-        app:iconSize="96dp"
-        app:iconTint="@android:color/white" />
-
-    <!-- Ряд кнопок под кнопкой подключения: обновить все подписки,
-         пинг всех (только спидометр, без надписи), самый быстрый. -->
     <LinearLayout
-        android:id="@+id/quick_test_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
-        android:layout_marginBottom="8dp"
-        android:baselineAligned="false"
-        android:orientation="horizontal">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/refresh_all_button"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
-            android:contentDescription="@string/update_all_subscription"
-            android:minWidth="0dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            app:icon="@drawable/ic_baseline_refresh_24"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="20dp" />
+        <!-- Панель закреплена -->
+        <include
+            layout="@layout/layout_appbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/ping_all_button"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
+        <!-- Уезжающий блок -->
+        <LinearLayout
+            android:id="@+id/top_buttons"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
-            android:contentDescription="@string/ping_all_servers"
-            android:minWidth="0dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            app:icon="@drawable/ic_baseline_speed_24"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="20dp" />
+            android:orientation="vertical">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/fastest_button"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:text="@string/fastest_server"
-            android:textAllCaps="false"
-            android:textSize="13sp"
-            app:icon="@drawable/ic_baseline_bolt_24"
-            app:iconGravity="textStart"
-            app:iconPadding="6dp"
-            app:iconSize="18dp" />
+            <!-- Круглая кнопка подключения. 190dp ≈ 3 см: в Android 1dp = 1/160 дюйма,
+                 так что 3 см = 3/2,54*160 ≈ 189dp. Стоит ровно по центру экрана.
+
+                 Это MaterialButton, а не ServiceButton (FAB): на таком размере FAB
+                 пересчитывал размер значка по своим правилам и рисовал его мимо
+                 кнопки. Здесь размер иконки задан явно через app:iconSize.
+                 Пустой android:text обязателен — иначе значок прижмётся к краю. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/connect_button"
+                android:layout_width="190dp"
+                android:layout_height="190dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="10dp"
+                android:contentDescription="@string/connect"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text=""
+                app:backgroundTint="?fabColorBackground"
+                app:cornerRadius="95dp"
+                app:icon="@drawable/ic_power_24"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconSize="96dp"
+                app:iconTint="@android:color/white" />
+
+            <!-- Ряд кнопок под кнопкой подключения: обновить все подписки,
+                 пинг всех (только спидометр, без надписи), самый быстрый. -->
+            <LinearLayout
+                android:id="@+id/quick_test_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="8dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/refresh_all_button"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:contentDescription="@string/update_all_subscription"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    app:icon="@drawable/ic_baseline_refresh_24"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="20dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/ping_all_button"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:contentDescription="@string/ping_all_servers"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    app:icon="@drawable/ic_baseline_speed_24"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="20dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fastest_button"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/fastest_server"
+                    android:textAllCaps="false"
+                    android:textSize="13sp"
+                    app:icon="@drawable/ic_baseline_bolt_24"
+                    app:iconGravity="textStart"
+                    app:iconPadding="6dp"
+                    app:iconSize="18dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Подвижная часть: карточка статуса, вкладки, строка действий,
+             список серверов. Едет вверх вместе с блоком кнопок. -->
+        <LinearLayout
+            android:id="@+id/bottom_block"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Гоппер VPN: карточка статуса. Скрывается, когда фрагмент открыт
+                 для выбора профиля, — там она не нужна. -->
+            <include
+                layout="@layout/layout_status_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/group_tab"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?colorPrimary"
+                android:elevation="4dp"
+                android:visibility="gone"
+                app:tabIndicatorColor="?tabIndicatorColor"
+                app:tabIndicatorFullWidth="false"
+                app:tabMode="scrollable"
+                app:tabPaddingStart="16dp"
+                app:tabRippleColor="?tabRippleColor"
+                app:tabSelectedTextColor="?tabSelectedTextColor"
+                app:tabTextColor="?tabTextColor"
+                app:tabUnboundedRipple="false" />
+
+            <!-- Гоппер VPN: строка действий текущей подписки. Позже переедет
+                 в заголовок каждой подписки, когда появится вертикальный аккордеон. -->
+            <include
+                layout="@layout/layout_group_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/group_pager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Гоппер VPN: карточка статуса. Скрывается, когда фрагмент открыт
-         для выбора профиля, — там она не нужна. -->
-    <include
-        layout="@layout/layout_status_card"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/group_tab"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?colorPrimary"
-        android:elevation="4dp"
-        android:visibility="gone"
-        app:tabIndicatorColor="?tabIndicatorColor"
-        app:tabIndicatorFullWidth="false"
-        app:tabMode="scrollable"
-        app:tabPaddingStart="16dp"
-        app:tabRippleColor="?tabRippleColor"
-        app:tabSelectedTextColor="?tabSelectedTextColor"
-        app:tabTextColor="?tabTextColor"
-        app:tabUnboundedRipple="false" />
-
-    <!-- Гоппер VPN: строка действий текущей подписки. Позже переедет
-         в заголовок каждой подписки, когда появится вертикальный аккордеон. -->
-    <include
-        layout="@layout/layout_group_actions"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/group_pager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
