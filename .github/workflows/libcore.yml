@@ -5,25 +5,13 @@
 # нужны Go, Android NDK и форк gomobile. Здесь как раз Linux-раннер, где
 # всё это ставится.
 #
-# Ядро НЕ хранится в репозитории осмысленно: aar весит 36 МБ, и он
-# зависит от коммитов двух чужих репозиториев, которые зашиты в
-# buildScript/lib/core/get_source_env.sh. Собирать его в CI правильнее,
-# чем тащить бинарник в git.
+# Ядро не хранится в репозитории: aar весит 36 МБ и зависит от
+# коммитов двух чужих репозиториев, зашитых в
+# buildScript/lib/core/get_source_env.sh.
 
 name: libcore
 
 on:
-  # Именно {} , а не голый ключ: workflow_dispatch без значения
-  # (то есть null) делает весь workflow нерабочим — GitHub создаёт
-  # запуск с нулём задач, без логов и артефактов, и молчит о причине.
-  # Нашёл перебором: тот же файл без этого ключа отрабатывает.
-  # Ручной запуск при этом доступен только с ветки по умолчанию,
-  # то есть из main.
-  workflow_dispatch: {}
-
-  # Сборка ядра нужна только при изменении того, что на неё влияет.
-  # Исходники sing-box и libneko лежат снаружи, поэтому их изменения сюда
-  # не попадают, — для них есть отдельный ежедневный запуск ниже.
   push:
     branches:
       - awg
@@ -34,11 +22,15 @@ on:
       - 'app/libs/libcore.aar'
       - '.github/workflows/libcore.yml'
 
-# Следить за новыми версиями ядра. Как только у amnezia-vpn/amneziawg-go
-# выходит релиз, этот запуск пересобирает ядро на свежем коммите, и
-# awg-поля в приложении начинают работать без правки кода.
-schedule:
-  - cron: '23 5 * * 1'
+  schedule:
+    - cron: '23 5 * * 1'
+
+  # Именно {} и именно последним. Оба условия проверены перебором:
+  # workflow_dispatch без значения (null) ломает workflow целиком, GitHub
+  # создаёт запуск с нулём задач и молчит о причине; и стоящий его выше
+  # остальных триггеров тоже даёт ноль задач. Рабочая комбинация —
+  # как здесь: push, потом schedule, потом пустой объект в конце.
+  workflow_dispatch: {}
 
 jobs:
   libcore:
@@ -50,22 +42,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Go 1.25 нужен не только самому форку gomobile: amneziawg-go
-      # требует go 1.25.0 в своём go.mod, на более старом тулчейне
-      # модуль просто не соберётся.
+      # Go 1.25 нужен не только форку gomobile: amneziawg-go требует
+      # go 1.25.0 в своём go.mod, на более старом тулчейне модуль
+      # просто не соберётся.
       - name: Install Golang
         uses: actions/setup-go@v5
         with:
           go-version: ^1.25
           cache: false
 
-      # Версия NDK зашита в buildScript/init/env_ndk.sh и в CI NekoBox.
-      # Расхождение с ней даст «Error: NDK not found».
+      # Версия NDK зашита в buildScript/init/env_ndk.sh, расхождение
+      # даст «Error: NDK not found».
+      #
+      # Именно setup-ndk, а не sdkmanager: на раннере sdkmanager не в
+      # PATH и шаг падает. action ставит NDK в $ANDROID_HOME/ndk/<версия>
+      # и выставляет ANDROID_NDK_HOME — то есть ровно то, что ищет
+      # env_ndk.sh, сперва проверяя каталог, потом переменную.
       - name: Install Android NDK
-        run: sdkmanager "ndk;25.0.8775105"
+        uses: android-actions/setup-ndk@v3
+        with:
+          ndk-version: 25.0.8775105
 
-      # Форк gomobile ставится один раз в GOPATH, его сборка занимает
-      # минуты, так что кэшируем именно его, а не всю GOPATH.
+      # Форк gomobile собирается минутами, поэтому кэшируем его, а не
+      # всю GOPATH.
       - name: Cache gomobile
         uses: actions/cache@v4
         with:
@@ -76,11 +75,9 @@ jobs:
           key: gomobile-${{ runner.os }}-master2-${{ hashFiles('libcore/init.sh') }}
 
       # Кэш ядра: те же условия, что у NekoBox, — хэш скриптов сборки
-      # плюс хэш отслеживаемых файлов ядра. Смысл тот же: если ничего
-      # не менялось, пересобирать нативное заново полчаса незачем.
-      # Имя обязательно в кавычках: в «Ядро: хэши» есть двоеточие с
-      # пробелом, а YAML такое в простом значении не допускает — файл
-      # не парсится, и запуск падает молча, до создания задачи.
+      # плюс хэш отслеживаемых файлов ядра.
+      # Имя в кавычках обязательно: в «Ядро: хэши» есть двоеточие с
+      # пробелом, а YAML такое в простом значении не допускает.
       - name: "Ядро: хэши для кэша"
         run: |
           find buildScript libcore/*.sh | xargs cat | sha1sum > golang_status
@@ -108,9 +105,9 @@ jobs:
           echo "размер aar: $(du -h app/libs/libcore.aar | cut -f1)"
           echo "библиотеки внутри:"
           unzip -l app/libs/libcore.aar | grep '\.so$'
-          echo "::group::все готово"
 
       - name: Отчёт
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           echo "### Ядро собрано" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -119,6 +116,7 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Выложить ядро
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: libcore-aar
