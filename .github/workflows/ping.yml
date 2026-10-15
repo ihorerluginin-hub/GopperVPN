@@ -1,0 +1,14 @@
+name: ping
+
+on:
+  push:
+    branches:
+      - awg
+    paths:
+      - '.github/workflows/ping.yml'
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "живой"
