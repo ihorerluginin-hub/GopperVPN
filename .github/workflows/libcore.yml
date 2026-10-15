@@ -99,8 +99,17 @@ jobs:
           path: app/libs/libcore.aar
           key: libcore-${{ hashFiles('.github/workflows/libcore.yml', 'golang_status', 'libcore_status') }}
 
-      # Через bash, а не ./run: у скрипта не выставлен бит исполнения,
-      # и прямой вызов даёт exit code 126.
+      # Скрипты лежат в репозитории без бита исполнения: git его не
+      # хранит, а скрипт run ищет вложенный через [ -x ... ]. Без chmod
+      # переменная EXEC остаётся пустой, и он падает с
+      # «exec: : not found», код 127.
+      - name: Выставить бит исполнения
+        run: |
+          chmod +x run
+          find buildScript libcore -name '*.sh' -exec chmod +x {} +
+          ls -l run
+
+      # Через bash, а не ./run: бит может не пережить checkout.
       - name: Скачать ресурсы (geosite, geoip)
         run: bash ./run init action gradle
 
