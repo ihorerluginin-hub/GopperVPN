@@ -1,0 +1,22 @@
+# Проверочный: рабочий ping плюс блок on: из libcore.
+name: probe
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - awg
+    paths:
+      - '.github/workflows/probe.yml'
+
+schedule:
+  - cron: '23 5 * * 1'
+
+jobs:
+  probe:
+    name: Проверка триггеров
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - run: echo "живой"
