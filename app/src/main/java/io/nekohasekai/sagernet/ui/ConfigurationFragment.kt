@@ -213,12 +213,23 @@ class ConfigurationFragment @JvmOverloads constructor(
         ProfileManager.addListener(adapter)
         GroupManager.addListener(adapter)
 
-        // Гоппер VPN: круглая кнопка подключения сверху. Это FrameLayout,
-        // а не MaterialButton: объёмный вид требует градиентной заливки.
-        val connectButton = view.findViewById<View>(R.id.connect_button)
+        // Гоппер VPN: круглая кнопка подключения сверху. Класс не
+        // FrameLayout, а CircularConnectButton — он же рисует обход луча.
+        val connectButton = view.findViewById<CircularConnectButton>(R.id.connect_button)
         connectButton.isVisible = !select
         if (!select) {
-            connectButton.setOnClickListener { (activity as? MainActivity)?.toggleService() }
+            connectButton.setOnClickListener {
+                val activity = activity as? MainActivity ?: return@setOnClickListener
+                // Подключение запускается на полном обороте луча: сначала
+                // круг закрашивается, и только потом VPN поднимается.
+                // Состояние читается здесь, а не берётся из
+                // updateConnectionUi — к моменту тапа оно могло устареть.
+                if (DataStore.serviceState.canStop) {
+                    activity.toggleService()
+                } else {
+                    connectButton.startSweep(SWEEP_DURATION) { activity.toggleService() }
+                }
+            }
         }
 
         // Ряд кнопок под кнопкой подключения: обновить все, пинг всех,
@@ -1200,6 +1211,17 @@ class ConfigurationFragment @JvmOverloads constructor(
     private var connectState: BaseService.State? = null
     private var connectColor: Int? = null
     private var connectColorAnimator: ValueAnimator? = null
+
+    companion object {
+        /**
+         * Гоппер VPN: длительность обхода луча, мс.
+         *
+         * Подобрано на глаз по ощущению: быстрее 900 — не успевает
+         * прочитаться как круг, медленнее 1500 — начинает казаться, что
+         * приложение зависло.
+         */
+        private const val SWEEP_DURATION = 1100L
+    }
 
     /**
      * Гоппер VPN: увести верхние кнопки при прокрутке списка.
