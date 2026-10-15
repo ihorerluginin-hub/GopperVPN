@@ -1,23 +1,20 @@
-﻿# Проба: on-блок libcore, но branches только awg и путь только свой.
+﻿# Проба A: точная копия заведомо рабочей структуры.
 name: probe2
 
 on:
-  workflow_dispatch: {}
-
   push:
     branches:
       - awg
     paths:
       - '.github/workflows/probe2.yml'
 
-schedule:
-  - cron: '23 5 * * 1'
+  schedule:
+    - cron: '23 5 * * 1'
+
+  workflow_dispatch: {}
 
 jobs:
-  libcore:
-    name: Native core (libcore.aar)
+  probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
-
     steps:
       - run: echo "живой"

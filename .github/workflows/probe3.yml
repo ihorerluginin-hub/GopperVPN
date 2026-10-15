@@ -1,0 +1,22 @@
+# Проба B: рабочая структура плюс имя задачи и timeout-minutes.
+name: probe3
+
+on:
+  push:
+    branches:
+      - awg
+    paths:
+      - '.github/workflows/probe3.yml'
+
+  schedule:
+    - cron: '23 5 * * 1'
+
+  workflow_dispatch: {}
+
+jobs:
+  libcore:
+    name: Native core (libcore.aar)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - run: echo "живой"
