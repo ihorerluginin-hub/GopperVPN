@@ -45,6 +45,12 @@ $clrShadow    = [System.Drawing.Color]::FromArgb(55, 0, 0, 0)
 # остаются внутри и щит читается целиком.
 $markRatio = 0.55
 
+# На сколько опущен знак относительно центра холста, в миллиметрах.
+# Для пересчёта: 1 dp = 1/160 дюйма, 1 дюйм = 25,4 мм.
+# Те же 0,15875 мм на dp, что и в комментарии к строке ниже.
+$shieldDropMm = 0.5
+$mmPerDp = 25.4 / 160.0
+
 function ConvertFrom-SvgPath([string]$d) {
     # Разбор подмножества SVG pathData: M, L, Q, Z. GDI+ квадратичных
     # кривых не умеет, поэтому Q пересчитывается в кубическую:
@@ -129,7 +135,20 @@ function Invoke-DrawMark([int]$side, [bool]$withBackground) {
 
     $markSize = $side * $markRatio
     $cx = $side / 2.0
-    $cy = $side / 2.0
+
+    # Знак опущен на полмиллиметра ниже центра — так же, как щит на кнопке
+    # подключения сдвинут на 2 мм. Величина задана в миллиметрах, поэтому
+    # пересчитывается в пиксели через размер холста.
+    #
+    # Холст у двух наборов разный: legacy-иконка это 48dp целиком, а
+    # foreground у adaptive icon — холст 108dp, из которого маска показывает
+    # только центральные 72. Без поправки на это legacy сдвинулся бы втрое
+    # сильнее, чем нужно.
+    #
+    # Один dp = 1/160 дюйма = 25,4/160 мм.
+    $canvasDp = if ($withBackground) { 48 } else { 108 }
+    $dropPx = $side * ($shieldDropMm / ($canvasDp * $mmPerDp))
+    $cy = $side / 2.0 + $dropPx
 
     $shield = ConvertFrom-SvgPath $shieldPath
     $shield.Transform((New-MarkMatrix $cx $cy $markSize))
