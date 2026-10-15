@@ -1,4 +1,4 @@
-# Проба: push плюс schedule. Убран workflow_dispatch.
+# Проба: push, schedule и workflow_dispatch с явным пустым объектом.
 name: probe
 
 on:
@@ -8,8 +8,10 @@ on:
     paths:
       - '.github/workflows/probe.yml'
 
-schedule:
-  - cron: '23 5 * * 1'
+  schedule:
+    - cron: '23 5 * * 1'
+
+  workflow_dispatch: {}
 
 jobs:
   probe:
