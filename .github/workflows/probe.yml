@@ -1,4 +1,4 @@
-# Проба: только push, как в рабочем ping. Убраны workflow_dispatch и schedule.
+# Проба: push плюс schedule. Убран workflow_dispatch.
 name: probe
 
 on:
@@ -7,6 +7,9 @@ on:
       - awg
     paths:
       - '.github/workflows/probe.yml'
+
+schedule:
+  - cron: '23 5 * * 1'
 
 jobs:
   probe:
