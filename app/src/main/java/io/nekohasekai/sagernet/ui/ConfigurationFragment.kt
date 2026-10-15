@@ -1,6 +1,7 @@
 package io.nekohasekai.sagernet.ui
 
 import android.annotation.SuppressLint
+import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -92,6 +93,7 @@ import io.nekohasekai.sagernet.ui.profile.TrojanSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.TuicSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.VMessSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.WireGuardSettingsActivity
+import io.nekohasekai.sagernet.widget.CircularConnectButton
 import io.nekohasekai.sagernet.widget.QRCodeDialog
 import io.nekohasekai.sagernet.widget.UndoSnackbarManager
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -1117,7 +1119,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         // подключён — зелёный. Обычная логика «зелёный значит можно
         // подключать» тут вводила в заблуждение: кнопка меняла цвет
         // нажатием, а не состоянием.
-        v.findViewById<View>(R.id.connect_button)?.let { connectButton ->
+        v.findViewById<CircularConnectButton>(R.id.connect_button)?.let { connectButton ->
             val buttonColor = when (state) {
                 BaseService.State.Connected ->
                     ctx.getColorAttr(R.attr.colorPrimary)
@@ -1127,31 +1129,77 @@ class ConfigurationFragment @JvmOverloads constructor(
                     ContextCompat.getColor(ctx, R.color.material_red_500)
             }
 
-            // Объём: заливка светлее сверху и темнее снизу, плюс тень
-            // из android:elevation в разметке. Конструктор с двумя
-            // цветами, а не setGradient(): тот появился только в API 24,
-            // а minSdk в приложении 21.
-            connectButton.background = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(
-                    ColorUtils.blendARGB(buttonColor, Color.WHITE, 0.22f),
-                    ColorUtils.blendARGB(buttonColor, Color.BLACK, 0.16f),
-                ),
-            ).apply { shape = GradientDrawable.OVAL }
+            // Гоппер VPN: переход между состояниями.
+            //
+            // Раньше цвет кнопки менялся мгновенно — кнопка просто подменяла
+            // фон, и переход читался как щелчок без перехода. Теперь цвет
+            // интерполируется за 350 мс, а поверх кнопка коротко
+            // расправляется (pop). Вместе это и есть переход.
+            //
+            // Анимируется только при смене состояния: updateConnectionUi
+            // зовётся и просто так — с перерисовкой пинга, — и гонять
+            // анимацию на каждом вызове бессмысленно.
+            fun paint(color: Int) {
+                // Объём: заливка светлее сверху и темнее снизу, плюс
+                // тень из android:elevation в разметке. Конструктор с
+                // двумя цветами, а не setGradient(): тот появился
+                // только в API 24, а minSdk в приложении 21.
+                connectButton.background = GradientDrawable(
+                    GradientDrawable.Orientation.TOP_BOTTOM,
+                    intArrayOf(
+                        ColorUtils.blendARGB(color, Color.WHITE, 0.22f),
+                        ColorUtils.blendARGB(color, Color.BLACK, 0.16f),
+                    ),
+                ).apply { shape = GradientDrawable.OVAL }
 
-            // Стрелка на знаке лежит поверх щита, поэтому её видно даже
-            // когда она того же цвета, что кнопка: красим её так же,
-            // чтобы знак менялся вместе с кнопкой.
-            (v.findViewById<ImageView>(R.id.connect_icon)?.drawable as? LayerDrawable)?.let { layers ->
-                if (layers.numberOfLayers > 1) {
-                    layers.getDrawable(1)?.mutate()?.setTint(buttonColor)
+                // Стрелка на знаке лежит поверх щита, поэтому её видно даже
+                // когда она того же цвета, что кнопка: красим её так же,
+                // чтобы знак менялся вместе с кнопкой.
+                (v.findViewById<ImageView>(R.id.connect_icon)?.drawable as? LayerDrawable)?.let { layers ->
+                    if (layers.numberOfLayers > 1) {
+                        layers.getDrawable(1)?.mutate()?.setTint(color)
+                    }
                 }
+            }
+
+            val previousState = connectState
+            val previousColor = connectColor
+            connectState = state
+
+            connectColorAnimator?.cancel()
+
+            if (previousState == null || previousState == state || previousColor == null) {
+                // Первый показ или состояние не менялось — красим сразу.
+                paint(buttonColor)
+                connectColor = buttonColor
+            } else {
+                connectColor = buttonColor
+                connectColorAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+                    duration = 350L
+                    interpolator = CircularConnectButton.EASE
+                    addUpdateListener {
+                        val f = it.animatedValue as Float
+                        paint(ColorUtils.blendARGB(previousColor, buttonColor, f))
+                    }
+                    start()
+                }
+                connectButton.pop()
             }
 
             connectButton.contentDescription =
                 ctx.getText(if (state.canStop) R.string.stop else R.string.connect)
         }
     }
+
+    /**
+     * Гоппер VPN: состояние подключения и цвет кнопки на прошлом вызове.
+     *
+     * Нужны, чтобы переход анимировался один раз на смену состояния, а не
+     * на каждый вызов updateConnectionUi.
+     */
+    private var connectState: BaseService.State? = null
+    private var connectColor: Int? = null
+    private var connectColorAnimator: ValueAnimator? = null
 
     /**
      * Гоппер VPN: увести верхние кнопки при прокрутке списка.

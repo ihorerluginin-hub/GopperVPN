@@ -39,20 +39,23 @@
             <!-- Круглая кнопка подключения. 190dp ≈ 3 см: в Android 1dp = 1/160 дюйма,
                  так что 3 см = 3/2,54*160 ≈ 189dp. Стоит ровно по центру экрана.
 
-                 Это FrameLayout, а не MaterialButton: объёмной кнопке нужна
-                 градиентная заливка, а app:backgroundTint красит её целиком и
-                 переход просто исчезает. Фон-овал с градиентом задаётся из кода
-                 (ConfigurationFragment.updateConnectionUi), здесь только тень
-                 и отклик на нажатие.
+                 Класс не FrameLayout, а CircularConnectButton: касание
+                 берётся только внутри окружности, тень от elevation по
+                 контуру-окружности, отклик круглый. У голого FrameLayout
+                 всё это оставалось прямоугольным — в углу квадрата
+                 нажималось, тень шла плитой.
+
+                 Фон-овал с градиентом задаётся из кода
+                 (ConfigurationFragment.updateConnectionUi) — заливка
+                 зависит от состояния подключения. MaterialButton не
+                 годится: app:backgroundTint красит его целиком и переход
+                 пропадает.
 
                  Внутри — щит со стрелкой из иконки приложения
                  (drawable/ic_app_mark.xml), без её синей подложки и без
                  чёрточек под щитом: подложкой служит сама кнопка — красная,
-                 пока VPN не подключён, зелёная, когда подключён.
-
-                 android:elevation даёт тень по контуру овала, поэтому кнопка
-                 читается как выпуклая, а не нарисованная. -->
-            <FrameLayout
+                 пока VPN не подключён, зелёная, когда подключён. -->
+            <io.nekohasekai.sagernet.widget.CircularConnectButton
                 android:id="@+id/connect_button"
                 android:layout_width="190dp"
                 android:layout_height="190dp"
@@ -64,8 +67,7 @@
                 android:clickable="true"
                 android:contentDescription="@string/connect"
                 android:elevation="14dp"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
+                android:focusable="true">
 
                 <!-- Высота 133dp, а не квадрат: остриё щита оттянуто на 2 мм, вьюпорт
                      стал 268 × 296.1. Чтобы сам щит остался прежних
@@ -84,7 +86,7 @@
                     android:src="@drawable/ic_app_mark"
                     android:translationY="12.6dp" />
 
-            </FrameLayout>
+            </io.nekohasekai.sagernet.widget.CircularConnectButton>
 
             <!-- Ряд кнопок под кнопкой подключения: обновить все подписки,
                  пинг всех (только спидометр, без надписи), самый быстрый. -->
