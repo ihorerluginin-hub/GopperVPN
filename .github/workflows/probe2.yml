@@ -1,4 +1,4 @@
-﻿# Проба: вся метаинформация libcore, но шаги заменены на один echo.
+﻿# Проба: on-блок libcore, но branches только awg и путь только свой.
 name: probe2
 
 on:
@@ -7,11 +7,7 @@ on:
   push:
     branches:
       - awg
-      - main
     paths:
-      - 'libcore/**'
-      - 'buildScript/**'
-      - 'app/libs/libcore.aar'
       - '.github/workflows/probe2.yml'
 
 schedule:
@@ -24,42 +20,4 @@ jobs:
     timeout-minutes: 90
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Golang
-        uses: actions/setup-go@v5
-        with:
-          go-version: ^1.25
-          cache: false
-
-      - name: Install Android NDK
-        run: sdkmanager "ndk;25.0.8775105"
-
-      - name: Cache gomobile
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/go/bin/gomobile-matsuri
-            ~/go/bin/gobind-matsuri
-          key: gomobile-${{ runner.os }}-master2-${{ hashFiles('libcore/init.sh') }}
-
-      - name: "Хэши для кэша"
-        run: |
-          find buildScript libcore/*.sh | xargs cat | sha1sum > golang_status
-          git ls-files libcore | xargs cat | sha1sum > libcore_status
-
-      - name: Cache libcore.aar
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: app/libs/libcore.aar
-          key: libcore-${{ hashFiles('.github/workflows/probe2.yml', 'golang_status', 'libcore_status') }}
-
-      - name: Скачать ресурсы
-        run: ./run init action gradle
-
-      - name: Собрать ядро
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: ./run lib core
+      - run: echo "живой"
