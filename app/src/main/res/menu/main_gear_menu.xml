@@ -33,11 +33,6 @@
 
     <group android:id="@+id/gear_misc">
         <item
-            android:id="@+id/nav_logcat"
-            android:icon="@drawable/ic_baseline_bug_report_24"
-            android:title="@string/menu_log" />
-
-        <item
             android:id="@+id/nav_traffic"
             android:icon="@drawable/ic_baseline_transform_24"
             android:title="@string/menu_dashboard" />
@@ -49,11 +44,6 @@
     </group>
 
     <group android:id="@+id/gear_about">
-        <item
-            android:id="@+id/nav_tuiguang"
-            android:icon="@drawable/ic_social_share"
-            android:title="@string/ads" />
-
         <item
             android:id="@+id/nav_about"
             android:icon="@drawable/ic_baseline_info_24"

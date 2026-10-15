@@ -301,11 +301,9 @@ class ConfigurationFragment @JvmOverloads constructor(
         (activity as? MainActivity)?.statusListener = { updateConnectionUi() }
         updateConnectionUi()
 
-        // порядок серверов в меню «⋮» относится к раскрытой подписке,
-        // поэтому пересчитываем его при каждой смене подписки
+        // при смене подписки аккордеон перерисовывается
         adapter.onGroupChanged = {
             resetCollapse()
-            checkOrderMenu()
         }
 
         toolbar.setOnClickListener {
@@ -695,10 +693,6 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             R.id.action_connection_tcp_ping -> {
                 pingTest(false)
-            }
-
-            R.id.action_connection_url_test -> {
-                urlTest()
             }
         }
         return true
@@ -1236,51 +1230,6 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     /**
-     * Гоппер VPN: отметки в меню «⋮ → Порядок серверов» относятся к
-     * раскрытой подписке. В режиме выбора профиля меню с порядком нет,
-     * поэтому и настраивать нечего.
-     */
-    fun checkOrderMenu() {
-        if (select) return
-
-        val menu = toolbar.menu
-        val origin = menu.findItem(R.id.action_order_origin) ?: return
-        val byName = menu.findItem(R.id.action_order_by_name)
-        val byDelay = menu.findItem(R.id.action_order_by_delay)
-
-        val group = expandedGroupOrNull() ?: return
-        when (group.order) {
-            GroupOrder.ORIGIN -> origin.isChecked = true
-            GroupOrder.BY_NAME -> byName.isChecked = true
-            GroupOrder.BY_DELAY -> byDelay.isChecked = true
-        }
-
-        fun updateTo(order: Int) {
-            if (group.order == order) return
-            runOnDefaultDispatcher {
-                group.order = order
-                GroupManager.updateGroup(group)
-            }
-        }
-
-        origin.setOnMenuItemClickListener {
-            it.isChecked = true
-            updateTo(GroupOrder.ORIGIN)
-            true
-        }
-        byName.setOnMenuItemClickListener {
-            it.isChecked = true
-            updateTo(GroupOrder.BY_NAME)
-            true
-        }
-        byDelay.setOnMenuItemClickListener {
-            it.isChecked = true
-            updateTo(GroupOrder.BY_DELAY)
-            true
-        }
-    }
-
-    /**
      * NekoBox Fast: "Ping all" - tests every server of every subscription.
      */
     fun pingAllServers() {
@@ -1489,8 +1438,9 @@ class ConfigurationFragment @JvmOverloads constructor(
          *
          * GroupOrder.ORIGIN означает «следовать общей настройке
          * sortServersByDelay», а BY_NAME и BY_DELAY остаются
-         * переопределением для конкретной подписки. Выключенная сортировка
-         * по пингу оставляет исходный порядок.
+         * переопределением для конкретной подписки. Переопределение
+         * выбирается в экране редактирования подписки — из меню «⋮»
+         * на главном экране оно убрано.
          */
         private fun sortedProfiles(group: ProxyGroup): List<ProxyEntity> {
             val profiles = SagerDatabase.proxyDao.getByGroup(group.id).toMutableList()

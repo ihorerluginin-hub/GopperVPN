@@ -317,7 +317,6 @@
     <string name="connection_test_tcp_ping_unavailable">TCPing در دسترس نیست</string>
     <string name="connection_test_icmp_ping" translatable="false">ICMPing</string>
     <string name="connection_test_icmp_ping_unavailable">ICMPing در دسترس نیست</string>
-    <string name="connection_test_url_test" translatable="false">آزمایش اتصال به لینک</string>
     <string name="connection_test_domain_not_found">دامنه یافت نشد</string>
     <string name="connection_test_refused">اتصال رد شد</string>
     <string name="connection_test_unreachable">متصل نمی‌شود</string>
@@ -495,7 +494,6 @@
     <string name="log_level">سطح ثبت آمار</string>
     <string name="enable_clash_api_summary">ارائه Clash api و صفحه yacd را در 127.0.0.1: 9090</string>
     <string name="xtls_flow">Flow (VLESS دستورالعمل فرعی)</string>
-    <string name="ads">تبلیغات</string>
     <string name="bypass_lan_in_core">دورزدن شبکه محلی در هسته برنامه</string>
     <string name="need_restart">برای اجرای تغییرات، برنامه را دوباره راه‌اندازی کنید</string>
     <string name="use_selector">استفاده از انتخاب‌گر</string>
