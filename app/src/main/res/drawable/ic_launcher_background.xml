@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Подложка adaptive-иконки. Раньше здесь был сплошной синий цвет, тогда как
+  в mipmap-*/ic_launcher.png для Android 7 и старше фон рисуется градиентом
+  из make_icon.ps1: на одном и том же устройстве иконка в лаунчере и в
+  списке приложений выглядела разноцветной. Теперь обе стороны рисуют
+  один и тот же градиент #0A7040 → #35B97B (gopper_600 → gopper_400).
+
+  Диагональная, как в make_icon.ps1: LinearGradientShader с
+  startX=startY=0 и endX=endY=размер элемента.
+
+  Раньше был <color name="ic_launcher_background">, он удалён: ссылок на
+  него, кроме adaptive-icon, в проекте не осталось.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:endColor="#35B97B"
+        android:startColor="#0A7040"
+        android:type="linear" />
+</shape>
