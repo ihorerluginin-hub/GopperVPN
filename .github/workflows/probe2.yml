@@ -1,0 +1,126 @@
+# Гоппер VPN: сборка нативного ядра.
+#
+# Ядро — это Go-модуль libcore, который через gomobile превращается в
+# libcore.aar, а тот кладётся в app/libs. На Windows это не собирается:
+# нужны Go, Android NDK и форк gomobile. Здесь как раз Linux-раннер, где
+# всё это ставится.
+#
+# Ядро НЕ хранится в репозитории осмысленно: aar весит 36 МБ, и он
+# зависит от коммитов двух чужих репозиториев, которые зашиты в
+# buildScript/lib/core/get_source_env.sh. Собирать его в CI правильнее,
+# чем тащить бинарник в git.
+
+name: libcore
+
+on:
+  # Именно {} , а не голый ключ: workflow_dispatch без значения
+  # (то есть null) делает весь workflow нерабочим — GitHub создаёт
+  # запуск с нулём задач, без логов и артефактов, и молчит о причине.
+  # Нашёл перебором: тот же файл без этого ключа отрабатывает.
+  # Ручной запуск при этом доступен только с ветки по умолчанию,
+  # то есть из main.
+  workflow_dispatch: {}
+
+  # Сборка ядра нужна только при изменении того, что на неё влияет.
+  # Исходники sing-box и libneko лежат снаружи, поэтому их изменения сюда
+  # не попадают, — для них есть отдельный ежедневный запуск ниже.
+  push:
+    branches:
+      - awg
+      - main
+    paths:
+      - 'libcore/**'
+      - 'buildScript/**'
+      - 'app/libs/libcore.aar'
+      - '.github/workflows/probe2.yml'
+
+# Следить за новыми версиями ядра. Как только у amnezia-vpn/amneziawg-go
+# выходит релиз, этот запуск пересобирает ядро на свежем коммите, и
+# awg-поля в приложении начинают работать без правки кода.
+schedule:
+  - cron: '23 5 * * 1'
+
+jobs:
+  libcore:
+    name: Native core (libcore.aar)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Go 1.25 нужен не только самому форку gomobile: amneziawg-go
+      # требует go 1.25.0 в своём go.mod, на более старом тулчейне
+      # модуль просто не соберётся.
+      - name: Install Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.25
+          cache: false
+
+      # Версия NDK зашита в buildScript/init/env_ndk.sh и в CI NekoBox.
+      # Расхождение с ней даст «Error: NDK not found».
+      - name: Install Android NDK
+        run: sdkmanager "ndk;25.0.8775105"
+
+      # Форк gomobile ставится один раз в GOPATH, его сборка занимает
+      # минуты, так что кэшируем именно его, а не всю GOPATH.
+      - name: Cache gomobile
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/go/bin/gomobile-matsuri
+            ~/go/bin/gobind-matsuri
+          key: gomobile-${{ runner.os }}-master2-${{ hashFiles('libcore/init.sh') }}
+
+      # Кэш ядра: те же условия, что у NekoBox, — хэш скриптов сборки
+      # плюс хэш отслеживаемых файлов ядра. Смысл тот же: если ничего
+      # не менялось, пересобирать нативное заново полчаса незачем.
+      # Имя обязательно в кавычках: в «Ядро: хэши» есть двоеточие с
+      # пробелом, а YAML такое в простом значении не допускает — файл
+      # не парсится, и запуск падает молча, до создания задачи.
+      - name: "Ядро: хэши для кэша"
+        run: |
+          find buildScript libcore/*.sh | xargs cat | sha1sum > golang_status
+          git ls-files libcore | xargs cat | sha1sum > libcore_status
+
+      - name: Cache libcore.aar
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: app/libs/libcore.aar
+          key: libcore-${{ hashFiles('.github/workflows/probe2.yml', 'golang_status', 'libcore_status') }}
+
+      - name: Скачать ресурсы (geosite, geoip)
+        run: ./run init action gradle
+
+      - name: Собрать ядро
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: ./run lib core
+
+      - name: Проверка результата
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          test -f app/libs/libcore.aar || { echo "::error::libcore.aar не собран"; exit 1; }
+          echo "размер aar: $(du -h app/libs/libcore.aar | cut -f1)"
+          echo "библиотеки внутри:"
+          unzip -l app/libs/libcore.aar | grep '\.so$'
+          echo "::group::все готово"
+
+      - name: Отчёт
+        run: |
+          echo "### Ядро собрано" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          unzip -l app/libs/libcore.aar | grep '\.so$' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Выложить ядро
+        uses: actions/upload-artifact@v4
+        with:
+          name: libcore-aar
+          path: app/libs/libcore.aar
+          retention-days: 30
