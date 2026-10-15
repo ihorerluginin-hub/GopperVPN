@@ -99,12 +99,14 @@ jobs:
           path: app/libs/libcore.aar
           key: libcore-${{ hashFiles('.github/workflows/libcore.yml', 'golang_status', 'libcore_status') }}
 
+      # Через bash, а не ./run: у скрипта не выставлен бит исполнения,
+      # и прямой вызов даёт exit code 126.
       - name: Скачать ресурсы (geosite, geoip)
-        run: ./run init action gradle
+        run: bash ./run init action gradle
 
       - name: Собрать ядро
         if: steps.cache.outputs.cache-hit != 'true'
-        run: ./run lib core
+        run: bash ./run lib core
 
       - name: Проверка результата
         if: steps.cache.outputs.cache-hit != 'true'
