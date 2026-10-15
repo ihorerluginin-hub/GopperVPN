@@ -1,4 +1,4 @@
-# Проба B: рабочая структура плюс имя задачи и timeout-minutes.
+# Проба: работающая структура плюс полный набор шагов из libcore.
 name: probe3
 
 on:
@@ -18,5 +18,67 @@ jobs:
     name: Native core (libcore.aar)
     runs-on: ubuntu-latest
     timeout-minutes: 90
+
     steps:
-      - run: echo "живой"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.25
+          cache: false
+
+      - name: Install Android NDK
+        run: sdkmanager "ndk;25.0.8775105"
+
+      - name: Cache gomobile
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/go/bin/gomobile-matsuri
+            ~/go/bin/gobind-matsuri
+          key: gomobile-${{ runner.os }}-master2-${{ hashFiles('libcore/init.sh') }}
+
+      - name: "Хэши для кэша"
+        run: |
+          find buildScript libcore/*.sh | xargs cat | sha1sum > golang_status
+          git ls-files libcore | xargs cat | sha1sum > libcore_status
+
+      - name: Cache libcore.aar
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: app/libs/libcore.aar
+          key: libcore-${{ hashFiles('.github/workflows/probe3.yml', 'golang_status', 'libcore_status') }}
+
+      - name: Скачать ресурсы
+        run: ./run init action gradle
+
+      - name: Собрать ядро
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: ./run lib core
+
+      - name: Проверка результата
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          test -f app/libs/libcore.aar || { echo "::error::aar нет"; exit 1; }
+          echo "размер aar: $(du -h app/libs/libcore.aar | cut -f1)"
+          unzip -l app/libs/libcore.aar | grep '\.so$'
+
+      - name: Отчёт
+        run: |
+          echo "### Ядро собрано" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          unzip -l app/libs/libcore.aar | grep '\.so$' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Выложить ядро
+        uses: actions/upload-artifact@v4
+        with:
+          name: libcore-aar
+          path: app/libs/libcore.aar
+          retention-days: 30
