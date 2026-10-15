@@ -54,14 +54,23 @@ jobs:
       # Версия NDK зашита в buildScript/init/env_ndk.sh, расхождение
       # даст «Error: NDK not found».
       #
-      # Именно setup-ndk, а не sdkmanager: на раннере sdkmanager не в
-      # PATH и шаг падает. action ставит NDK в $ANDROID_HOME/ndk/<версия>
-      # и выставляет ANDROID_NDK_HOME — то есть ровно то, что ищет
-      # env_ndk.sh, сперва проверяя каталог, потом переменную.
+      # Именно sdkmanager с полным путём, а не голый вызов: на раннере его
+      # нет в PATH, из-за чего шаг падал. Плюс приём лицензий, без
+      # него установка молча не проходит.
+      #
+      # Сторонний nttld/setup-ndk подошёл бы тоже, но лишняя зависимость
+      # ради шага, который делает штатный sdkmanager.
       - name: Install Android NDK
-        uses: android-actions/setup-ndk@v3
-        with:
-          ndk-version: 25.0.8775105
+        run: |
+          set -e
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(command -v sdkmanager)"
+          fi
+          echo "sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "ndk;25.0.8775105"
+          ls -d "$ANDROID_HOME/ndk/25.0.8775105"
 
       # Форк gomobile собирается минутами, поэтому кэшируем его, а не
       # всю GOPATH.
