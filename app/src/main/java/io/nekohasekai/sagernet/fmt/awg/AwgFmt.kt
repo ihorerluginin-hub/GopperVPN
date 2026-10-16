@@ -8,6 +8,19 @@ import org.ini4j.Profile.Section
 import java.io.StringReader
 
 /**
+ * Дополняет адрес длиной префикса, если её нет.
+ *
+ * sing-box разбирает local_address как netip.Prefix и без слеша падает:
+ *   netip.ParsePrefix("172.16.0.2"): no '/'
+ * Конфигурации, выгруженные не из .conf, часто хранят адрес голым, без
+ * маски, и из-за этого профиль не запускается вовсе.
+ */
+private fun String.withPrefixLength(): String {
+    if (isBlank() || contains('/')) return this
+    return if (contains(':')) "$this/128" else "$this/32"
+}
+
+/**
  * Сборка исходящего AmneziaWG.
  *
  * Пустые строки и нули в конфигурацию не попадают: в amneziawg-go
@@ -19,7 +32,7 @@ fun buildSingBoxOutboundAwgBean(bean: AwgBean): SingBoxOptions.Outbound_AWGOptio
         type = "awg"
         server = bean.serverAddress
         server_port = bean.serverPort
-        local_address = bean.localAddress.listByLineOrComma()
+        local_address = bean.localAddress.listByLineOrComma().map { it.withPrefixLength() }
         private_key = bean.privateKey
         peer_public_key = bean.peerPublicKey
         if (bean.peerPreSharedKey.isNotBlank()) pre_shared_key = bean.peerPreSharedKey
