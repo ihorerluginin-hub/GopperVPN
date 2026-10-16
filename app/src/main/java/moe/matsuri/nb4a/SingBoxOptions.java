@@ -3916,6 +3916,103 @@ public class SingBoxOptions {
 
     }
 
+    public static class Outbound_AWGOptions extends Outbound {
+
+        // Generate note: nested type DialerOptions
+        public String detour;
+
+        public String bind_interface;
+
+        public String inet4_bind_address;
+
+        public String inet6_bind_address;
+
+        public String protect_path;
+
+        public Integer routing_mark;
+
+        public Boolean reuse_addr;
+
+        public Long connect_timeout;
+
+        public Boolean tcp_fast_open;
+
+        public Boolean tcp_multi_path;
+
+        public Boolean udp_fragment;
+
+        public String domain_strategy;
+
+        public Long fallback_delay;
+
+        // End of public DialerOptions ;
+
+        // Generate note: Listable
+        public List<String> local_address;
+
+        public String private_key;
+
+        // Generate note: nested type ServerOptions
+        public String server;
+
+        public Integer server_port;
+
+        // End of public ServerOptions ;
+
+        public String peer_public_key;
+
+        public String pre_shared_key;
+
+        public Integer mtu;
+
+        public Integer persistent_keepalive_interval;
+
+        // AWG: мусорные пакеты перед хендшейком
+        public Integer junk_count;
+
+        public Integer junk_min;
+
+        public Integer junk_max;
+
+        // AWG: криптографические паддинги
+        public Integer init_padding;
+
+        public Integer response_padding;
+
+        public Integer cookie_padding;
+
+        public Integer transport_padding;
+
+        // AWG: заголовки, одно число либо диапазон «x-y»
+        public String init_header;
+
+        public String response_header;
+
+        public String cookie_header;
+
+        public String transport_header;
+
+        // AWG: подписи I1-I5
+        public String signature_1;
+
+        public String signature_2;
+
+        public String signature_3;
+
+        public String signature_4;
+
+        public String signature_5;
+
+        public String header_protection_key;
+
+        public String content_padding_addition;
+
+        public Boolean random_trailers;
+
+        public Boolean disable_cookies;
+
+    }
+
     public static class Outbound_HysteriaOptions extends Outbound {
 
         // Generate note: nested type DialerOptions

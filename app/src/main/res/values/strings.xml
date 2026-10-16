@@ -609,4 +609,33 @@
 <string name="subscription_actions">Subscription actions</string>
 <string name="url_test">URL test</string>
 <string name="update_subscription">Update subscription</string>
+
+    <!-- AmneziaWG -->
+    <string name="action_amneziawg" translatable="false">AmneziaWG</string>
+    <string name="awg_keepalive">Keepalive, sec</string>
+    <string name="awg_cat_junk">Junk packets</string>
+    <string name="awg_cat_paddings">Paddings</string>
+    <string name="awg_cat_headers">Headers</string>
+    <string name="awg_cat_signatures">Signatures</string>
+    <string name="awg_cat_advanced">Advanced</string>
+    <string name="awg_junk_count" translatable="false">Jc, amount</string>
+    <string name="awg_junk_min" translatable="false">Jmin, bytes</string>
+    <string name="awg_junk_max" translatable="false">Jmax, bytes</string>
+    <string name="awg_s1" translatable="false">S1, init</string>
+    <string name="awg_s2" translatable="false">S2, response</string>
+    <string name="awg_s3" translatable="false">S3, cookie</string>
+    <string name="awg_s4" translatable="false">S4, transport</string>
+    <string name="awg_h1" translatable="false">H1, init</string>
+    <string name="awg_h2" translatable="false">H2, response</string>
+    <string name="awg_h3" translatable="false">H3, cookie</string>
+    <string name="awg_h4" translatable="false">H4, transport</string>
+    <string name="awg_i1" translatable="false">I1</string>
+    <string name="awg_i2" translatable="false">I2</string>
+    <string name="awg_i3" translatable="false">I3</string>
+    <string name="awg_i4" translatable="false">I4</string>
+    <string name="awg_i5" translatable="false">I5</string>
+    <string name="awg_header_protection_key">Header protection key</string>
+    <string name="awg_content_padding" translatable="false">ContentPaddingAddition</string>
+    <string name="awg_random_trailers" translatable="false">RandomTrailers</string>
+    <string name="awg_disable_cookies" translatable="false">DisableCookies</string>
 </resources>

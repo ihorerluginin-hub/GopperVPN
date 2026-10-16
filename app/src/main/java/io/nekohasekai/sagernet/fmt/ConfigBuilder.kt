@@ -21,6 +21,8 @@ import io.nekohasekai.sagernet.fmt.tuic.TuicBean
 import io.nekohasekai.sagernet.fmt.tuic.buildSingBoxOutboundTuicBean
 import io.nekohasekai.sagernet.fmt.v2ray.StandardV2RayBean
 import io.nekohasekai.sagernet.fmt.v2ray.buildSingBoxOutboundStandardV2RayBean
+import io.nekohasekai.sagernet.fmt.awg.AwgBean
+import io.nekohasekai.sagernet.fmt.awg.buildSingBoxOutboundAwgBean
 import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.fmt.wireguard.buildSingBoxOutboundWireguardBean
 import io.nekohasekai.sagernet.ktx.isIpAddress
@@ -358,6 +360,9 @@ fun buildConfig(
 
                         is WireGuardBean ->
                             buildSingBoxOutboundWireguardBean(bean)
+
+                        is AwgBean ->
+                            buildSingBoxOutboundAwgBean(bean)
 
                         is SSHBean ->
                             buildSingBoxOutboundSSHBean(bean)

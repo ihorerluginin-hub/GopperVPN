@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.*
 import io.nekohasekai.sagernet.fmt.AbstractBean
+import io.nekohasekai.sagernet.fmt.awg.isAwgIni
+import io.nekohasekai.sagernet.fmt.awg.parseAwgConf
 import io.nekohasekai.sagernet.fmt.http.HttpBean
 import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean
 import io.nekohasekai.sagernet.fmt.hysteria.parseHysteria1Json
@@ -677,9 +679,16 @@ object RawUpdater : GroupUpdater() {
                 Logs.w(e)
             }
         } else if (text.contains("[Interface]")) {
-            // wireguard
+            // wireguard или amneziawg: оба в формате .conf с секцией
+            // [Interface]. Различаются по наличию ключей обфускации —
+            // в обычном WireGuard их не бывает в принципе.
             try {
-                proxies.addAll(parseWireGuard(text).map {
+                val parsed: List<AbstractBean> = if (isAwgIni(Ini(StringReader(text)))) {
+                    parseAwgConf(text)
+                } else {
+                    parseWireGuard(text)
+                }
+                proxies.addAll(parsed.map {
                     if (fileName.isNotBlank()) it.name = fileName.removeSuffix(".conf")
                     it
                 })

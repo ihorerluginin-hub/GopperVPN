@@ -28,6 +28,7 @@ import io.nekohasekai.sagernet.fmt.trojan_go.toUri
 import io.nekohasekai.sagernet.fmt.tuic.TuicBean
 import io.nekohasekai.sagernet.fmt.tuic.toUri
 import io.nekohasekai.sagernet.fmt.v2ray.*
+import io.nekohasekai.sagernet.fmt.awg.AwgBean
 import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.ktx.app
 import io.nekohasekai.sagernet.ui.profile.*
@@ -68,6 +69,7 @@ data class ProxyEntity(
     var wgBean: WireGuardBean? = null,
     var shadowTLSBean: ShadowTLSBean? = null,
     var anyTLSBean: AnyTLSBean? = null,
+    var awgBean: AwgBean? = null,
     var chainBean: ChainBean? = null,
     var nekoBean: NekoBean? = null,
     var configBean: ConfigBean? = null,
@@ -90,6 +92,7 @@ data class ProxyEntity(
         const val TYPE_TUIC = 20
         const val TYPE_MIERU = 21
         const val TYPE_ANYTLS = 22
+        const val TYPE_AWG = 23
 
         const val TYPE_CONFIG = 998
         const val TYPE_NEKO = 999
@@ -174,6 +177,7 @@ data class ProxyEntity(
             TYPE_TUIC -> tuicBean = KryoConverters.tuicDeserialize(byteArray)
             TYPE_SHADOWTLS -> shadowTLSBean = KryoConverters.shadowTLSDeserialize(byteArray)
             TYPE_ANYTLS -> anyTLSBean = KryoConverters.anyTLSDeserialize(byteArray)
+            TYPE_AWG -> awgBean = KryoConverters.awgDeserialize(byteArray)
             TYPE_CHAIN -> chainBean = KryoConverters.chainDeserialize(byteArray)
             TYPE_NEKO -> nekoBean = KryoConverters.nekoDeserialize(byteArray)
             TYPE_CONFIG -> configBean = KryoConverters.configDeserialize(byteArray)
@@ -195,6 +199,7 @@ data class ProxyEntity(
         TYPE_TUIC -> "TUIC"
         TYPE_SHADOWTLS -> "ShadowTLS"
         TYPE_ANYTLS -> "AnyTLS"
+        TYPE_AWG -> "AmneziaWG"
         TYPE_CHAIN -> chainName
         TYPE_NEKO -> nekoBean!!.displayType()
         TYPE_CONFIG -> configBean!!.displayType()
@@ -220,6 +225,7 @@ data class ProxyEntity(
             TYPE_TUIC -> tuicBean
             TYPE_SHADOWTLS -> shadowTLSBean
             TYPE_ANYTLS -> anyTLSBean
+            TYPE_AWG -> awgBean
             TYPE_CHAIN -> chainBean
             TYPE_NEKO -> nekoBean
             TYPE_CONFIG -> configBean
@@ -432,6 +438,11 @@ data class ProxyEntity(
                 anyTLSBean = bean
             }
 
+            is AwgBean -> {
+                type = TYPE_AWG
+                awgBean = bean
+            }
+
             is ChainBean -> {
                 type = TYPE_CHAIN
                 chainBean = bean
@@ -469,6 +480,7 @@ data class ProxyEntity(
                 TYPE_TUIC -> TuicSettingsActivity::class.java
                 TYPE_SHADOWTLS -> ShadowTLSSettingsActivity::class.java
                 TYPE_ANYTLS -> AnyTLSSettingsActivity::class.java
+                TYPE_AWG -> AwgSettingsActivity::class.java
                 TYPE_CHAIN -> ChainSettingsActivity::class.java
                 TYPE_CONFIG -> ConfigSettingActivity::class.java
                 else -> throw IllegalArgumentException()
