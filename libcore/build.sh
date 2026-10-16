@@ -31,7 +31,9 @@ fi
 TARGET="${LIBCORE_TARGET:-android/arm,android/arm64}"
 
 export GOBIND=gobind-matsuri
-"$GOPATH"/bin/gomobile-matsuri bind -v -target="$TARGET" -androidapi 21 -cache "$(realpath $BUILD)" -trimpath -ldflags='-s -w' -tags='with_conntrack,with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api' . || exit 1
+# with_awg включает исходящий AmneziaWG (protocol/awg). Без этого тега
+# он регистрируется как заглушка и выдаёт понятную ошибку.
+"$GOPATH"/bin/gomobile-matsuri bind -v -target="$TARGET" -androidapi 21 -cache "$(realpath $BUILD)" -trimpath -ldflags='-s -w' -tags='with_conntrack,with_gvisor,with_quic,with_wireguard,with_awg,with_utls,with_clash_api' . || exit 1
 rm -r libcore-sources.jar
 
 echo ">> собраны архитектуры: $TARGET"

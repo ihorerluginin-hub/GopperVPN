@@ -113,6 +113,38 @@ jobs:
       - name: Скачать ресурсы (geosite, geoip)
         run: bash ./run init action gradle
 
+      # go.sum для amneziawg-go и его зависимостей посчитать вручную
+      # нельзя, а на машине, где ведётся разработка, Go не стоит.
+      # Поэтому tidy делается здесь, а результат уходит артефактом:
+      # его нужно закоммитить, иначе каждый прогон будет разрешать
+      # зависимости заново.
+      #
+      # Источники форков тянутся отдельно: get_source.sh живёт внутри
+      # buildScript/lib/core/init.sh, а тот вызывается уже на шаге
+      # сборки. Скрипт идемпотентен — если каталог есть, он только
+      # делает checkout.
+      - name: Зависимости (go mod tidy)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          bash buildScript/lib/core/get_source.sh
+          cd libcore
+          go mod tidy
+          echo "--- требуется amneziawg-go:"
+          grep amneziawg go.mod
+          echo "--- директива go:"
+          head -5 go.mod | grep -E '^go |^toolchain'
+
+      - name: Выложить go.mod и go.sum
+        if: always() && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gomod
+          path: |
+            libcore/go.mod
+            libcore/go.sum
+          retention-days: 30
+
       - name: Собрать ядро
         if: steps.cache.outputs.cache-hit != 'true'
         run: bash ./run lib core

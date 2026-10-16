@@ -1,10 +1,13 @@
 module libcore
 
-go 1.23.1
+// Поднято с 1.23.1: amneziawg-go требует go >= 1.25.0, и модуль с
+// меньшей директивой go в граф не собирается.
+go 1.25.0
 
-toolchain go1.23.6
+toolchain go1.25.0
 
 require (
+	github.com/amnezia-vpn/amneziawg-go/v3 v3.1.20260828
 	github.com/matsuridayo/libneko v1.0.0 // replaced
 	github.com/miekg/dns v1.1.67
 	github.com/oschwald/maxminddb-golang v1.13.1
