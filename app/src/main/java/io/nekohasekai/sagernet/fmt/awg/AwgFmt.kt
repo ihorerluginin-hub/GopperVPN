@@ -1,9 +1,10 @@
 package io.nekohasekai.sagernet.fmt.awg
 
+import io.nekohasekai.sagernet.ktx.applyDefaultValues
 import moe.matsuri.nb4a.SingBoxOptions
 import moe.matsuri.nb4a.utils.listByLineOrComma
 import org.ini4j.Ini
-import org.ini4j.Section
+import org.ini4j.Profile.Section
 import java.io.StringReader
 
 /**
@@ -79,26 +80,35 @@ private val AWG_MARKER_KEYS = listOf(
  * и `jc`, а полагаться на это в импортере конфигураций нельзя:
  * расхождение выглядело бы как «пропали настройки обфускации».
  */
-private fun Section.value(key: String): String? {
-    val direct = get(key)
-    if (direct != null && direct.isNotBlank()) return direct
-    for (k in keySet()) {
+/**
+ * Поиск значения по ключу без учёта регистра.
+ *
+ * Принимает Map, а не Section: интерфейс Section наследует Map сразу
+ * через MultiMap и CommentedMap, и на нём Kotlin не может выбрать
+ * перегрузку get. Явное приведение снимает вопрос.
+ */
+private fun lookup(section: Section, key: String): String? {
+    val map = section as Map<String, String>
+    map[key]?.let { if (it.isNotBlank()) return it }
+    for (k in map.keys) {
         if (!k.equals(key, ignoreCase = true)) continue
-        val found = get(k)
-        if (found != null && found.isNotBlank()) return found
+        val found = map[k]
+        if (!found.isNullOrBlank()) return found
     }
     return null
 }
 
-private fun Section.boolValue(key: String): Boolean {
-    val raw = value(key) ?: return false
+private fun intValue(section: Section, key: String): Int? = lookup(section, key)?.trim()?.toIntOrNull()
+
+private fun boolValue(section: Section, key: String): Boolean {
+    val raw = lookup(section, key) ?: return false
     return raw.equals("true", ignoreCase = true) || raw == "1"
 }
 
 /** Есть ли в секции [Interface] хоть один ключ, которого нет в обычном WireGuard. */
 fun isAwgIni(ini: Ini): Boolean {
     val iface = ini["Interface"] ?: return false
-    return AWG_MARKER_KEYS.any { iface.value(it) != null }
+    return AWG_MARKER_KEYS.any { lookup(iface, it) != null }
 }
 
 /**
@@ -124,53 +134,53 @@ fun parseAwgConf(conf: String): List<AwgBean> {
 
     // Всё, что относится к устройству, читаем один раз: секций [Peer]
     // может быть много, а эти настройки у них общие.
-    val privateKey = iface.value("PrivateKey").orEmpty()
-    val mtu = iface.value("MTU")?.toIntOrNull()
+    val privateKey = lookup(iface, "PrivateKey").orEmpty()
+    val mtu = lookup(iface, "MTU")?.toIntOrNull()
 
-    val junkCount = iface.value("Jc")?.toIntOrNull() ?: 0
-    val junkMin = iface.value("Jmin")?.toIntOrNull() ?: 0
-    val junkMax = iface.value("Jmax")?.toIntOrNull() ?: 0
+    val junkCount = lookup(iface, "Jc")?.toIntOrNull() ?: 0
+    val junkMin = lookup(iface, "Jmin")?.toIntOrNull() ?: 0
+    val junkMax = lookup(iface, "Jmax")?.toIntOrNull() ?: 0
 
-    val initPadding = iface.value("S1")?.toIntOrNull() ?: 0
-    val responsePadding = iface.value("S2")?.toIntOrNull() ?: 0
-    val cookiePadding = iface.value("S3")?.toIntOrNull() ?: 0
-    val transportPadding = iface.value("S4")?.toIntOrNull() ?: 0
+    val initPadding = lookup(iface, "S1")?.toIntOrNull() ?: 0
+    val responsePadding = lookup(iface, "S2")?.toIntOrNull() ?: 0
+    val cookiePadding = lookup(iface, "S3")?.toIntOrNull() ?: 0
+    val transportPadding = lookup(iface, "S4")?.toIntOrNull() ?: 0
 
-    val initHeader = iface.value("H1").orEmpty()
-    val responseHeader = iface.value("H2").orEmpty()
-    val cookieHeader = iface.value("H3").orEmpty()
-    val transportHeader = iface.value("H4").orEmpty()
+    val initHeader = lookup(iface, "H1").orEmpty()
+    val responseHeader = lookup(iface, "H2").orEmpty()
+    val cookieHeader = lookup(iface, "H3").orEmpty()
+    val transportHeader = lookup(iface, "H4").orEmpty()
 
-    val signature1 = iface.value("I1").orEmpty()
-    val signature2 = iface.value("I2").orEmpty()
-    val signature3 = iface.value("I3").orEmpty()
-    val signature4 = iface.value("I4").orEmpty()
-    val signature5 = iface.value("I5").orEmpty()
+    val signature1 = lookup(iface, "I1").orEmpty()
+    val signature2 = lookup(iface, "I2").orEmpty()
+    val signature3 = lookup(iface, "I3").orEmpty()
+    val signature4 = lookup(iface, "I4").orEmpty()
+    val signature5 = lookup(iface, "I5").orEmpty()
 
-    val headerProtectionKey = iface.value("HeaderProtectionKey").orEmpty()
-    val contentPaddingAddition = iface.value("ContentPaddingAddition").orEmpty()
-    val randomTrailers = iface.boolValue("RandomTrailers")
-    val disableCookies = iface.boolValue("DisableCookies")
+    val headerProtectionKey = lookup(iface, "HeaderProtectionKey").orEmpty()
+    val contentPaddingAddition = lookup(iface, "ContentPaddingAddition").orEmpty()
+    val randomTrailers = boolValue(iface, "RandomTrailers")
+    val disableCookies = boolValue(iface, "DisableCookies")
 
     val beans = mutableListOf<AwgBean>()
     for (peer in peers) {
-        val endpoint = peer.value("Endpoint")
+        val endpoint = lookup(peer, "Endpoint")
         if (endpoint.isNullOrBlank() || !endpoint.contains(":")) continue
 
         // PersistentKeepalive в AWG допускает диапазон «25-30». Бин держит
         // целое, поэтому берём левую границу. Молча выбрасывать нельзя:
         // без keepalive NAT-соединение будет рваться по таймауту.
-        val keepalive = peer.value("PersistentKeepalive")
+        val keepalive = lookup(peer, "PersistentKeepalive")
             ?.substringBefore('-')?.trim()?.toIntOrNull() ?: 0
 
         val peerPort = endpoint.substringAfterLast(":").toIntOrNull() ?: continue
-        val peerKey = peer.value("PublicKey") ?: continue
+        val peerKey = lookup(peer, "PublicKey") ?: continue
 
         val bean = AwgBean()
         bean.serverAddress = endpoint.substringBeforeLast(":")
         bean.serverPort = peerPort
         bean.peerPublicKey = peerKey
-        bean.peerPreSharedKey = peer.value("PresharedKey").orEmpty()
+        bean.peerPreSharedKey = lookup(peer, "PresharedKey").orEmpty()
         bean.localAddress = localAddress.joinToString("\n")
         bean.privateKey = privateKey
         if (mtu != null) bean.mtu = mtu
