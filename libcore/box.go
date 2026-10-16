@@ -49,6 +49,15 @@ func VersionBox() string {
 				tags = setting.Value
 			}
 		}
+		// Версия amneziawg-go берётся из графа зависимостей, а не
+		// вписывается руками: так строка на экране «О приложении» всегда
+		// совпадает с тем, что реально собрано.
+		for _, dep := range debugInfo.Deps {
+			if dep != nil && dep.Path == "github.com/amnezia-vpn/amneziawg-go/v3" {
+				version = append(version, "amneziawg-go: "+dep.Version)
+				break
+			}
+		}
 	}
 
 	if tags != "" {
