@@ -19,4 +19,12 @@ class SettingsFragment : ToolbarFragment(R.layout.layout_config_settings) {
             .commitAllowingStateLoss()
     }
 
+    /**
+     * Просит дочерний фрагмент прокрутить список к запрошенному пункту.
+     */
+    fun scrollToTarget() {
+        (childFragmentManager.findFragmentById(R.id.settings) as? SettingsPreferenceFragment)
+            ?.scrollToTarget()
+    }
+
 }

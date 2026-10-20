@@ -367,6 +367,23 @@ class MainActivity : ThemedActivity(),
         return true
     }
 
+    /**
+     * Переход к настройкам автообновления подписок.
+     *
+     * Если экран настроек уже открыт, пересоздавать его нельзя — иначе
+     * потерялась бы позиция прокрутки, поэтому в этом случае просто
+     * прокручиваем список к нужному пункту.
+     */
+    fun openAutoUpdateSettings() {
+        SettingsPreferenceFragment.scrollTargetKey = Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE
+        val current = supportFragmentManager.findFragmentById(R.id.fragment_holder)
+        if (currentDestinationId == R.id.nav_settings && current is SettingsFragment) {
+            current.scrollToTarget()
+        } else {
+            displayFragmentWithId(R.id.nav_settings)
+        }
+    }
+
     private fun changeState(
         state: BaseService.State,
         msg: String? = null,
