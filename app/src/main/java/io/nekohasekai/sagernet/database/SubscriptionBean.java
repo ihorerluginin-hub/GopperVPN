@@ -20,6 +20,8 @@ public class SubscriptionBean extends Serializable {
     public Boolean updateWhenConnectedOnly;
     public String customUserAgent;
     public Boolean autoUpdate;
+    // Интервал автообновления в часах. В первой версии сериализации
+    // он хранился в минутах, значение пересчитывается при чтении.
     public Integer autoUpdateDelay;
     public Integer lastUpdated;
 
@@ -44,7 +46,7 @@ public class SubscriptionBean extends Serializable {
 
     @Override
     public void serializeToBuffer(ByteBufferOutput output) {
-        output.writeInt(1);
+        output.writeInt(2);
 
         output.writeInt(type);
 
@@ -87,6 +89,11 @@ public class SubscriptionBean extends Serializable {
         autoUpdate = input.readBoolean();
         autoUpdateDelay = input.readInt();
         lastUpdated = input.readInt();
+
+        if (version < 2) {
+            // В версии 1 интервал хранился в минутах, с версии 2 — в часах.
+            autoUpdateDelay = (autoUpdateDelay + 30) / 60;
+        }
         subscriptionUserinfo = input.readString();
     }
 
@@ -111,7 +118,7 @@ public class SubscriptionBean extends Serializable {
         if (updateWhenConnectedOnly == null) updateWhenConnectedOnly = false;
         if (customUserAgent == null) customUserAgent = "";
         if (autoUpdate == null) autoUpdate = false;
-        if (autoUpdateDelay == null) autoUpdateDelay = 1440;
+        if (autoUpdateDelay == null) autoUpdateDelay = 24;
         if (lastUpdated == null) lastUpdated = 0;
 
         if (bytesUsed == null) bytesUsed = 0L;

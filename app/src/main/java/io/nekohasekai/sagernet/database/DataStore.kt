@@ -111,9 +111,9 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var speedInterval by configurationStore.stringToInt(Key.SPEED_INTERVAL)
     var showGroupInNotification by configurationStore.boolean("showGroupInNotification")
 
-    // глобальное автообновление подписок: переключатель и общий интервал
+    // глобальное автообновление подписок: переключатель и общий интервал в часах
     var subscriptionGlobalAutoUpdate by configurationStore.boolean(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE)
-    var subscriptionGlobalAutoUpdateDelay by configurationStore.stringToInt(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE_DELAY) { 360 }
+    var subscriptionGlobalAutoUpdateDelayHours by configurationStore.stringToInt(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE_DELAY_HOURS) { 6 }
 
     var globalCustomConfig by configurationStore.string(Key.GLOBAL_CUSTOM_CONFIG) { "" }
 
@@ -254,7 +254,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var subscriptionUpdateWhenConnectedOnly by profileCacheStore.boolean(Key.SUBSCRIPTION_UPDATE_WHEN_CONNECTED_ONLY)
     var subscriptionUserAgent by profileCacheStore.string(Key.SUBSCRIPTION_USER_AGENT)
     var subscriptionAutoUpdate by profileCacheStore.boolean(Key.SUBSCRIPTION_AUTO_UPDATE)
-    var subscriptionAutoUpdateDelay by profileCacheStore.stringToInt(Key.SUBSCRIPTION_AUTO_UPDATE_DELAY) { 360 }
+    var subscriptionAutoUpdateDelayHours by profileCacheStore.stringToInt(Key.SUBSCRIPTION_AUTO_UPDATE_DELAY_HOURS) { 24 }
 
     var rulesFirstCreate by profileCacheStore.boolean("rulesFirstCreate")
 

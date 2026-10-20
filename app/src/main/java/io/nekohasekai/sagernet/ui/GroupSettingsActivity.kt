@@ -60,7 +60,7 @@ class GroupSettingsActivity(
         DataStore.subscriptionUpdateWhenConnectedOnly = subscription.updateWhenConnectedOnly
         DataStore.subscriptionUserAgent = subscription.customUserAgent
         DataStore.subscriptionAutoUpdate = subscription.autoUpdate
-        DataStore.subscriptionAutoUpdateDelay = subscription.autoUpdateDelay
+        DataStore.subscriptionAutoUpdateDelayHours = subscription.autoUpdateDelay
     }
 
     fun ProxyGroup.serialize() {
@@ -81,7 +81,7 @@ class GroupSettingsActivity(
                 updateWhenConnectedOnly = DataStore.subscriptionUpdateWhenConnectedOnly
                 customUserAgent = DataStore.subscriptionUserAgent
                 autoUpdate = DataStore.subscriptionAutoUpdate
-                autoUpdateDelay = DataStore.subscriptionAutoUpdateDelay
+                autoUpdateDelay = DataStore.subscriptionAutoUpdateDelayHours
             }
         }
     }
@@ -146,12 +146,12 @@ class GroupSettingsActivity(
         val subscriptionAutoUpdate =
             findPreference<SwitchPreference>(Key.SUBSCRIPTION_AUTO_UPDATE)!!
         val subscriptionAutoUpdateDelay =
-            findPreference<EditTextPreference>(Key.SUBSCRIPTION_AUTO_UPDATE_DELAY)!!
+            findPreference<EditTextPreference>(Key.SUBSCRIPTION_AUTO_UPDATE_DELAY_HOURS)!!
 
         subscriptionAutoUpdateDelay.isEnabled = subscriptionAutoUpdate.isChecked
         subscriptionAutoUpdateDelay.setOnPreferenceChangeListener { _, newValue ->
             val delay = (newValue as String).toIntOrNull()
-            if (delay == null || delay < SubscriptionUpdater.MIN_DELAY_MINUTES) {
+            if (delay == null || delay < SubscriptionUpdater.MIN_DELAY_HOURS) {
                 // раньше значение молча отбрасывалось — пользователь ничего не понимал
                 Toast.makeText(
                     requireContext(), R.string.auto_update_delay_min_toast, Toast.LENGTH_SHORT

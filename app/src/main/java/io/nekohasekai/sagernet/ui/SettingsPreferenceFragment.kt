@@ -216,7 +216,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val globalAutoUpdate =
             findPreference<SwitchPreference>(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE)!!
         val globalAutoUpdateDelay =
-            findPreference<EditTextPreference>(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE_DELAY)!!
+            findPreference<EditTextPreference>(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE_DELAY_HOURS)!!
 
         globalAutoUpdateDelay.isEnabled = globalAutoUpdate.isChecked
 
@@ -228,7 +228,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
         globalAutoUpdateDelay.setOnPreferenceChangeListener { _, newValue ->
             val delay = (newValue as String).toIntOrNull()
-            if (delay == null || delay < SubscriptionUpdater.MIN_DELAY_MINUTES) {
+            if (delay == null || delay < SubscriptionUpdater.MIN_DELAY_HOURS) {
                 // раньше значение молча отбрасывалось, пользователь ничего не понимал
                 Toast.makeText(
                     requireContext(), R.string.auto_update_delay_min_toast, Toast.LENGTH_SHORT

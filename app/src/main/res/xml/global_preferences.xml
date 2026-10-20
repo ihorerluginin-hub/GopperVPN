@@ -110,9 +110,9 @@
             app:summary="@string/global_auto_update_sum"
             app:title="@string/global_auto_update" />
         <EditTextPreference
-            app:defaultValue="360"
+            app:defaultValue="6"
             app:icon="@drawable/ic_baseline_timelapse_24"
-            app:key="subscriptionGlobalAutoUpdateDelay"
+            app:key="subscriptionGlobalAutoUpdateDelayHours"
             app:title="@string/auto_update_delay"
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
