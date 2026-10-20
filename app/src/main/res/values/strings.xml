@@ -352,6 +352,10 @@
     <string name="update_settings">Update Settings</string>
     <string name="auto_update">Auto Update</string>
     <string name="auto_update_delay">Auto Update Delay (In minutes)</string>
+    <string name="cag_subscriptions">Subscriptions</string>
+    <string name="global_auto_update">Auto update all subscriptions</string>
+    <string name="global_auto_update_sum">Turns on scheduled update for every subscription; subscriptions already enabled keep their own interval</string>
+    <string name="auto_update_delay_min_toast">At least 15 minutes required</string>
     <string name="update_when_connected_only">Update only when connected</string>
     <string name="update_when_connected_only_sum">Prevent IP address leakage</string>
     <string name="subscription_user_agent">UserAgent</string>

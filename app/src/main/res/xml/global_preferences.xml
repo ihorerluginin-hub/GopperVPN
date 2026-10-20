@@ -102,6 +102,21 @@
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="@string/cag_subscriptions">
+        <SwitchPreference
+            app:defaultValue="false"
+            app:icon="@drawable/ic_baseline_flip_camera_android_24"
+            app:key="subscriptionGlobalAutoUpdate"
+            app:summary="@string/global_auto_update_sum"
+            app:title="@string/global_auto_update" />
+        <EditTextPreference
+            app:defaultValue="360"
+            app:icon="@drawable/ic_baseline_timelapse_24"
+            app:key="subscriptionGlobalAutoUpdateDelay"
+            app:title="@string/auto_update_delay"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="@string/cag_route">
         <SwitchPreference
             app:icon="@drawable/ic_navigation_apps"

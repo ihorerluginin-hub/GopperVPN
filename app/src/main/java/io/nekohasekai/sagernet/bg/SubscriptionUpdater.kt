@@ -11,6 +11,7 @@ import androidx.work.multiprocess.RemoteWorkManager
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.SagerDatabase
+import io.nekohasekai.sagernet.database.SubscriptionBean
 import io.nekohasekai.sagernet.group.GroupUpdater
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.app
@@ -20,20 +21,38 @@ object SubscriptionUpdater {
 
     private const val WORK_NAME = "SubscriptionUpdater"
 
+    // Со скольки минут может работать периодическая задача WorkManager.
+    const val MIN_DELAY_MINUTES = 15
+
+    // Фактический интервал подписки: свой, если включён лично у неё,
+    // иначе глобальный. Глобальный переключатель перекрывает выключенный локальный.
+    fun effectiveDelaySeconds(subscription: SubscriptionBean): Long {
+        val delay = if (subscription.autoUpdate == true) {
+            (subscription.autoUpdateDelay ?: 0).toLong()
+        } else {
+            DataStore.subscriptionGlobalAutoUpdateDelay.toLong()
+        }
+        return delay * 60L
+    }
+
+    fun effectiveAutoUpdate(subscription: SubscriptionBean): Boolean {
+        return subscription.autoUpdate == true || DataStore.subscriptionGlobalAutoUpdate
+    }
+
     suspend fun reconfigureUpdater() {
         RemoteWorkManager.getInstance(app).cancelUniqueWork(WORK_NAME)
 
         val subscriptions = SagerDatabase.groupDao.subscriptions()
-            .filter { it.subscription!!.autoUpdate }
+            .filter { effectiveAutoUpdate(it.subscription!!) }
         if (subscriptions.isEmpty()) return
 
         // PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS
         var minDelay =
-            subscriptions.minByOrNull { it.subscription!!.autoUpdateDelay }!!.subscription!!.autoUpdateDelay.toLong()
+            subscriptions.minOf { effectiveDelaySeconds(it.subscription!!) } / 60L
         val now = System.currentTimeMillis() / 1000L
         var minInitDelay =
             subscriptions.minOf { now - it.subscription!!.lastUpdated - (minDelay * 60) }
-        if (minDelay < 15) minDelay = 15
+        if (minDelay < MIN_DELAY_MINUTES) minDelay = MIN_DELAY_MINUTES.toLong()
         if (minInitDelay > 60) minInitDelay = 60
 
         // main process
@@ -63,7 +82,7 @@ object SubscriptionUpdater {
 
         override suspend fun doWork(): Result {
             var subscriptions =
-                SagerDatabase.groupDao.subscriptions().filter { it.subscription!!.autoUpdate }
+                SagerDatabase.groupDao.subscriptions().filter { effectiveAutoUpdate(it.subscription!!) }
             if (!DataStore.serviceState.connected) {
                 Logs.d("work: not connected")
                 subscriptions = subscriptions.filter { !it.subscription!!.updateWhenConnectedOnly }
@@ -72,7 +91,7 @@ object SubscriptionUpdater {
             if (subscriptions.isNotEmpty()) for (profile in subscriptions) {
                 val subscription = profile.subscription!!
 
-                if (((System.currentTimeMillis() / 1000).toInt() - subscription.lastUpdated) < subscription.autoUpdateDelay * 60) {
+                if (((System.currentTimeMillis() / 1000).toInt() - subscription.lastUpdated) < effectiveDelaySeconds(subscription)) {
                     Logs.d("work: not updating " + profile.displayName())
                     continue
                 }

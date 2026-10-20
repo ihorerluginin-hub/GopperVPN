@@ -111,6 +111,10 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var speedInterval by configurationStore.stringToInt(Key.SPEED_INTERVAL)
     var showGroupInNotification by configurationStore.boolean("showGroupInNotification")
 
+    // глобальное автообновление подписок: переключатель и общий интервал
+    var subscriptionGlobalAutoUpdate by configurationStore.boolean(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE)
+    var subscriptionGlobalAutoUpdateDelay by configurationStore.stringToInt(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE_DELAY) { 360 }
+
     var globalCustomConfig by configurationStore.string(Key.GLOBAL_CUSTOM_CONFIG) { "" }
 
     var remoteDns by configurationStore.string(Key.REMOTE_DNS) { "https://dns.google/dns-query" }
