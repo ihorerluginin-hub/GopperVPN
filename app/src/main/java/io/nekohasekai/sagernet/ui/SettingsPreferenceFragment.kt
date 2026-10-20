@@ -26,11 +26,52 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
     private lateinit var globalCustomConfig: EditConfigPreference
 
+    companion object {
+        /**
+         * Одноразовая подсказка: к какому пункту прокрутить список.
+         *
+         * Ставится перед переходом на экран настроек, вычитывается и
+         * сбрасывается при прокрутке.
+         */
+        var scrollTargetKey: String? = null
+    }
+
+    /**
+     * Прокручивает список к запрошенному пункту.
+     *
+     * Индекс считается вручную: androidx.preference не отдаёт позицию
+     * предпочтения в списке, а поиск по ключу в иерархии представлений
+     * не работает.
+     */
+    fun scrollToTarget() {
+        val key = scrollTargetKey ?: return
+        scrollTargetKey = null
+        val target = findPreference<Preference>(key) ?: return
+        val index = preferenceIndex(target)
+        listView.post { listView.scrollToPosition(index) }
+    }
+
+    private fun preferenceIndex(preference: Preference): Int {
+        val root = preferenceManager.preferenceScreen ?: return 0
+        var index = 0
+        fun walk(group: PreferenceGroup): Boolean {
+            for (i in 0 until group.preferenceCount) {
+                val child = group.getPreference(i)
+                if (child === preference) return true
+                index++
+                if (child is PreferenceGroup && walk(child)) return true
+            }
+            return false
+        }
+        return if (walk(root)) index else 0
+    }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         listView.layoutManager = FixedLinearLayoutManager(listView)
+        scrollToTarget()
     }
 
     private val reloadListener = Preference.OnPreferenceChangeListener { _, _ ->

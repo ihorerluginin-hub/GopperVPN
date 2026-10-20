@@ -589,6 +589,10 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
             }
 
+            R.id.action_auto_update_settings -> {
+                (requireActivity() as MainActivity).openAutoUpdateSettings()
+            }
+
             R.id.action_clear_traffic_statistics -> {
                 runOnDefaultDispatcher {
                     val profiles = SagerDatabase.proxyDao.getByGroup(DataStore.currentGroupId())
