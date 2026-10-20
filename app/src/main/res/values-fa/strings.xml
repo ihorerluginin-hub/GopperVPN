@@ -338,7 +338,7 @@
     <string name="raw">خام</string>
     <string name="update_settings">اعمال تغییرات</string>
     <string name="auto_update">به‌روزرسانی خودکار</string>
-    <string name="auto_update_delay">به‌روزرسانی خودکار گروه (در مدت زمان مورد نظر به دقیقه)</string>
+    <string name="auto_update_delay">به‌روزرسانی خودکار گروه (در مدت زمان مورد نظر به ساعت)</string>
     <string name="update_when_connected_only">به‌روزرسانی هنگام متصل بودن</string>
     <string name="update_when_connected_only_sum">از افشای IP جلوگیری می‌شود.</string>
     <string name="subscription_user_agent">UserAgent</string>

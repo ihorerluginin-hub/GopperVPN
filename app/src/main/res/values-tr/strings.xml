@@ -204,7 +204,7 @@
     <string name="subscription_user_agent">Kullanıcı Kimliği</string>
     <string name="update_when_connected_only_sum">IP adresinin sızdırılmasını önle</string>
     <string name="update_when_connected_only">Sadece bağlanıldığında güncelle</string>
-    <string name="auto_update_delay">Otomatik Güncelleme Gecikmesi (Dakika cinsinden)</string>
+    <string name="auto_update_delay">Otomatik Güncelleme Gecikmesi (Saat cinsinden)</string>
     <string name="auto_update">Otomatik Güncelle</string>
     <string name="update_settings">Güncelleme Ayarları</string>
     <string name="raw">Ham</string>

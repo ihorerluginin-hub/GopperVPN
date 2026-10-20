@@ -572,18 +572,6 @@ class ConfigurationFragment @JvmOverloads constructor(
                 startActivity(Intent(requireActivity(), ChainSettingsActivity::class.java))
             }
 
-            R.id.action_update_subscription -> {
-                val group = DataStore.currentGroup()
-                if (group.type != GroupType.SUBSCRIPTION) {
-                    snackbar(R.string.group_not_subscription).show()
-                    Logs.e("onMenuItemClick: Group(${group.displayName()}) is not subscription")
-                } else {
-                    runOnLifecycleDispatcher {
-                        GroupUpdater.startUpdate(group, true)
-                    }
-                }
-            }
-
             R.id.action_auto_update_settings -> {
                 (requireActivity() as MainActivity).openAutoUpdateSettings()
             }
@@ -698,14 +686,6 @@ class ConfigurationFragment @JvmOverloads constructor(
                         }
                     }
                 }
-            }
-
-            R.id.action_ping_all -> {
-                pingAllServers()
-            }
-
-            R.id.action_fastest -> {
-                selectFastestServer()
             }
 
             R.id.action_connection_tcp_ping -> {

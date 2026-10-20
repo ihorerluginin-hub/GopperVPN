@@ -123,7 +123,7 @@
     <string name="subscription_user_agent">Bruker agent</string>
     <string name="update_when_connected_only_sum">Forhindre lekkasje av IP -adresse</string>
     <string name="update_when_connected_only">Oppdater bare når den er tilkoblet</string>
-    <string name="auto_update_delay">Forsinkelse automatisk oppdatering (i minutter)</string>
+    <string name="auto_update_delay">Forsinkelse automatisk oppdatering (i timer)</string>
     <string name="auto_update">Automatisk oppdatering</string>
     <string name="update_settings">Oppdater innstillinger</string>
     <string name="raw">Rå</string>
