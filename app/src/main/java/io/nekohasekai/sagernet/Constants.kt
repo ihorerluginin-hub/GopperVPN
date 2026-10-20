@@ -150,9 +150,9 @@ object Key {
     const val SUBSCRIPTION_UPDATE_WHEN_CONNECTED_ONLY = "subscriptionUpdateWhenConnectedOnly"
     const val SUBSCRIPTION_USER_AGENT = "subscriptionUserAgent"
     const val SUBSCRIPTION_AUTO_UPDATE = "subscriptionAutoUpdate"
-    const val SUBSCRIPTION_AUTO_UPDATE_DELAY = "subscriptionAutoUpdateDelay"
+    const val SUBSCRIPTION_AUTO_UPDATE_DELAY_HOURS = "subscriptionAutoUpdateDelayHours"
     const val SUBSCRIPTION_GLOBAL_AUTO_UPDATE = "subscriptionGlobalAutoUpdate"
-    const val SUBSCRIPTION_GLOBAL_AUTO_UPDATE_DELAY = "subscriptionGlobalAutoUpdateDelay"
+    const val SUBSCRIPTION_GLOBAL_AUTO_UPDATE_DELAY_HOURS = "subscriptionGlobalAutoUpdateDelayHours"
 
     //
 

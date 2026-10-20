@@ -21,18 +21,24 @@ object SubscriptionUpdater {
 
     private const val WORK_NAME = "SubscriptionUpdater"
 
-    // Со скольки минут может работать периодическая задача WorkManager.
-    const val MIN_DELAY_MINUTES = 15
+    // Интервал задаётся в часах. Меньше часа смысла нет: сам
+    // WorkManager разрешает хоть пятнадцать минут, но в часах это
+    // дробное значение, а половина часа для подписки бесполезна.
+    const val MIN_DELAY_HOURS = 1
 
-    // Фактический интервал подписки: свой, если включён лично у неё,
-    // иначе глобальный. Глобальный переключатель перекрывает выключенный локальный.
-    fun effectiveDelaySeconds(subscription: SubscriptionBean): Long {
-        val delay = if (subscription.autoUpdate == true) {
-            (subscription.autoUpdateDelay ?: 0).toLong()
+    // Фактический интервал подписки в часах: свой, если включён лично
+    // у неё, иначе глобальный. Глобальный переключатель перекрывает
+    // выключенный локальный.
+    fun effectiveDelayHours(subscription: SubscriptionBean): Int {
+        return if (subscription.autoUpdate == true) {
+            (subscription.autoUpdateDelay ?: 0)
         } else {
-            DataStore.subscriptionGlobalAutoUpdateDelay.toLong()
+            DataStore.subscriptionGlobalAutoUpdateDelayHours
         }
-        return delay * 60L
+    }
+
+    fun effectiveDelaySeconds(subscription: SubscriptionBean): Long {
+        return effectiveDelayHours(subscription) * 3600L
     }
 
     fun effectiveAutoUpdate(subscription: SubscriptionBean): Boolean {
@@ -46,20 +52,22 @@ object SubscriptionUpdater {
             .filter { effectiveAutoUpdate(it.subscription!!) }
         if (subscriptions.isEmpty()) return
 
-        // PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS
-        var minDelay =
-            subscriptions.minOf { effectiveDelaySeconds(it.subscription!!) } / 60L
+        // Периодическая задача WorkManager считает интервал в минутах.
+        var minDelayHours =
+            subscriptions.minOf { effectiveDelayHours(it.subscription!!) }.toLong()
+        if (minDelayHours < MIN_DELAY_HOURS) minDelayHours = MIN_DELAY_HOURS.toLong()
+        val minDelayMinutes = minDelayHours * 60
+
         val now = System.currentTimeMillis() / 1000L
         var minInitDelay =
-            subscriptions.minOf { now - it.subscription!!.lastUpdated - (minDelay * 60) }
-        if (minDelay < MIN_DELAY_MINUTES) minDelay = MIN_DELAY_MINUTES.toLong()
+            subscriptions.minOf { now - it.subscription!!.lastUpdated - (minDelayMinutes * 60) }
         if (minInitDelay > 60) minInitDelay = 60
 
         // main process
         RemoteWorkManager.getInstance(app).enqueueUniquePeriodicWork(
             WORK_NAME,
             UPDATE,
-            PeriodicWorkRequest.Builder(UpdateTask::class.java, minDelay, TimeUnit.MINUTES)
+            PeriodicWorkRequest.Builder(UpdateTask::class.java, minDelayMinutes, TimeUnit.MINUTES)
                 .apply {
                     if (minInitDelay > 0) setInitialDelay(minInitDelay, TimeUnit.SECONDS)
                 }

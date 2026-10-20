@@ -83,9 +83,9 @@
             app:key="subscriptionAutoUpdate"
             app:title="@string/auto_update" />
         <EditTextPreference
-            app:defaultValue="1440"
+            app:defaultValue="24"
             app:icon="@drawable/ic_baseline_timelapse_24"
-            app:key="subscriptionAutoUpdateDelay"
+            app:key="subscriptionAutoUpdateDelayHours"
             app:title="@string/auto_update_delay"
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
