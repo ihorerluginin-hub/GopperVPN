@@ -1,24 +1,12 @@
 package io.nekohasekai.sagernet.fmt.awg
 
 import io.nekohasekai.sagernet.ktx.applyDefaultValues
+import io.nekohasekai.sagernet.ktx.withPrefixLength
 import moe.matsuri.nb4a.SingBoxOptions
 import moe.matsuri.nb4a.utils.listByLineOrComma
 import org.ini4j.Ini
 import org.ini4j.Profile.Section
 import java.io.StringReader
-
-/**
- * Дополняет адрес длиной префикса, если её нет.
- *
- * sing-box разбирает local_address как netip.Prefix и без слеша падает:
- *   netip.ParsePrefix("172.16.0.2"): no '/'
- * Конфигурации, выгруженные не из .conf, часто хранят адрес голым, без
- * маски, и из-за этого профиль не запускается вовсе.
- */
-private fun String.withPrefixLength(): String {
-    if (isBlank() || contains('/')) return this
-    return if (contains(':')) "$this/128" else "$this/32"
-}
 
 /**
  * Сборка исходящего AmneziaWG.

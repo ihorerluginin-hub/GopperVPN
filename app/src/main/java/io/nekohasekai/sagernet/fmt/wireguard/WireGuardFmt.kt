@@ -1,5 +1,6 @@
 package io.nekohasekai.sagernet.fmt.wireguard
 
+import io.nekohasekai.sagernet.ktx.withPrefixLength
 import moe.matsuri.nb4a.SingBoxOptions
 import moe.matsuri.nb4a.utils.Util
 import moe.matsuri.nb4a.utils.listByLineOrComma
@@ -31,7 +32,7 @@ fun buildSingBoxOutboundWireguardBean(bean: WireGuardBean): SingBoxOptions.Outbo
         type = "wireguard"
         server = bean.serverAddress
         server_port = bean.serverPort
-        local_address = bean.localAddress.listByLineOrComma()
+        local_address = bean.localAddress.listByLineOrComma().map { it.withPrefixLength() }
         private_key = bean.privateKey
         peer_public_key = bean.peerPublicKey
         pre_shared_key = bean.peerPreSharedKey

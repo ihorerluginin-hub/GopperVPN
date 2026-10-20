@@ -32,6 +32,19 @@ fun String.isIpAddressV6(): Boolean {
     return NGUtil.isIpv6Address(this)
 }
 
+/**
+ * Дополняет адрес длиной префикса, если её нет.
+ *
+ * sing-box разбирает local_address как netip.Prefix и без слеша падает:
+ *   netip.ParsePrefix("172.16.0.2"): no '/'
+ * Конфигурации, выгруженные не из .conf, часто хранят адрес голым, без
+ * маски, и из-за этого профиль не запускается вовсе.
+ */
+fun String.withPrefixLength(): String {
+    if (isBlank() || contains('/')) return this
+    return if (contains(':')) "$this/128" else "$this/32"
+}
+
 // [2001:4860:4860::8888] -> 2001:4860:4860::8888
 fun String.unwrapIPV6Host(): String {
     if (startsWith("[") && endsWith("]")) {
