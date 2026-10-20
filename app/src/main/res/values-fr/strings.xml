@@ -286,7 +286,7 @@
     <string name="trojan_provider">Fournisseur de torjan</string>
     <string name="ooc_subscription_token_invalid">Jeton OOCv1 invalide</string>
     <string name="update_when_connected_only">Mettre à jour que quand connecté</string>
-    <string name="auto_update_delay">Délai de mise à jour automatique (en minutes)</string>
+    <string name="auto_update_delay">Délai de mise à jour automatique (en heures)</string>
     <string name="auto_update">Mise à jour auto</string>
     <string name="subscription_traffic">%s utilisé(s) / %s restant(s)</string>
     <string name="subscription_import">Importer une souscription</string>

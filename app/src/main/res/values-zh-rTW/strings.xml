@@ -304,7 +304,7 @@
     <string name="raw">原始</string>
     <string name="update_settings">更新設定</string>
     <string name="auto_update">自動更新</string>
-    <string name="auto_update_delay">自動更新間隔（分鐘）</string>
+    <string name="auto_update_delay">自動更新間隔（小時）</string>
     <string name="update_when_connected_only">僅在已連線時更新</string>
     <string name="update_when_connected_only_sum">防止 IP 位址洩漏</string>
     <string name="subscription_user_agent">使用者代理</string>

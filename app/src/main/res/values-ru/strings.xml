@@ -49,11 +49,11 @@
 <string name="auto_select_proxy_apps">Автоматический выбор прокси-приложений</string>
 <string name="auto_select_proxy_apps_message">Автоматический выбор прокси-приложений приведет к очистке текущего выбора.</string>
 <string name="auto_update">Автоматическое обновление</string>
-<string name="auto_update_delay">Задержка автоматического обновления (в минутах)</string>
+    <string name="auto_update_delay">Задержка автоматического обновления (в часах)</string>
 <string name="cag_subscriptions">Подписки</string>
 <string name="global_auto_update">Автообновление всех подписок</string>
 <string name="global_auto_update_sum">Включает автообновление для всех подписок; у подписок со включённым локальным переключателем остаётся свой интервал</string>
-<string name="auto_update_delay_min_toast">Не меньше 15 минут — ограничение WorkManager</string>
+    <string name="auto_update_delay_min_toast">Не меньше часа — ограничение WorkManager</string>
 <string name="backup">Бэкап</string>
 <string name="backup_groups_and_configurations">Группы и конфигурации</string>
 <string name="backup_import">Импортировать</string>

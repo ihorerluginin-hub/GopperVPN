@@ -341,7 +341,7 @@
     <string name="raw">Raw</string>
     <string name="update_settings">Налаштування оновлення</string>
     <string name="auto_update">Автоматичне оновлення</string>
-    <string name="auto_update_delay">Затримка автооновлення (у хвилинах)</string>
+    <string name="auto_update_delay">Затримка автооновлення (у годинах)</string>
     <string name="update_when_connected_only">Оновлювати лише при підключенні</string>
     <string name="update_when_connected_only_sum">Запобігати витоку IP-адреси</string>
     <string name="subscription_user_agent">UserAgent</string>

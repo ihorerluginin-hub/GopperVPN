@@ -249,7 +249,7 @@
     <string name="subscription_user_agent">وكيل المستخدم</string>
     <string name="update_when_connected_only_sum">منع تسرب عنوان IP</string>
     <string name="update_when_connected_only">التحديث فقط عند الاتصال</string>
-    <string name="auto_update_delay">تأخير التحديث التلقائي (بالدقائق)</string>
+    <string name="auto_update_delay">تأخير التحديث التلقائي (بالساعات)</string>
     <string name="auto_update">التحديث التلقائي</string>
     <string name="update_settings">تحديث الاعدادات</string>
     <string name="raw">الخام</string>
