@@ -6,12 +6,14 @@ import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.preference.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.nekohasekai.sagernet.Key
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
+import io.nekohasekai.sagernet.bg.SubscriptionUpdater
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.preference.EditTextPreferenceModifiers
 import io.nekohasekai.sagernet.ktx.*
@@ -169,6 +171,33 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         tunImplementation.onPreferenceChangeListener = reloadListener
         acquireWakeLock.onPreferenceChangeListener = reloadListener
         globalCustomConfig.onPreferenceChangeListener = reloadListener
+
+        val globalAutoUpdate =
+            findPreference<SwitchPreference>(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE)!!
+        val globalAutoUpdateDelay =
+            findPreference<EditTextPreference>(Key.SUBSCRIPTION_GLOBAL_AUTO_UPDATE_DELAY)!!
+
+        globalAutoUpdateDelay.isEnabled = globalAutoUpdate.isChecked
+
+        globalAutoUpdate.setOnPreferenceChangeListener { _, newValue ->
+            globalAutoUpdateDelay.isEnabled = (newValue as Boolean)
+            runOnDefaultDispatcher { SubscriptionUpdater.reconfigureUpdater() }
+            true
+        }
+
+        globalAutoUpdateDelay.setOnPreferenceChangeListener { _, newValue ->
+            val delay = (newValue as String).toIntOrNull()
+            if (delay == null || delay < SubscriptionUpdater.MIN_DELAY_MINUTES) {
+                // раньше значение молча отбрасывалось, пользователь ничего не понимал
+                Toast.makeText(
+                    requireContext(), R.string.auto_update_delay_min_toast, Toast.LENGTH_SHORT
+                ).show()
+                false
+            } else {
+                runOnDefaultDispatcher { SubscriptionUpdater.reconfigureUpdater() }
+                true
+            }
+        }
     }
 
     override fun onResume() {

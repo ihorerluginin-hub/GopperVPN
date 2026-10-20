@@ -21,6 +21,7 @@ import io.nekohasekai.sagernet.GroupType
 import io.nekohasekai.sagernet.Key
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
+import io.nekohasekai.sagernet.bg.SubscriptionUpdater
 import io.nekohasekai.sagernet.database.*
 import io.nekohasekai.sagernet.database.preference.OnPreferenceDataStoreChangeListener
 import io.nekohasekai.sagernet.ktx.Logs
@@ -150,10 +151,14 @@ class GroupSettingsActivity(
         subscriptionAutoUpdateDelay.isEnabled = subscriptionAutoUpdate.isChecked
         subscriptionAutoUpdateDelay.setOnPreferenceChangeListener { _, newValue ->
             val delay = (newValue as String).toIntOrNull()
-            if (delay == null) {
+            if (delay == null || delay < SubscriptionUpdater.MIN_DELAY_MINUTES) {
+                // раньше значение молча отбрасывалось — пользователь ничего не понимал
+                Toast.makeText(
+                    requireContext(), R.string.auto_update_delay_min_toast, Toast.LENGTH_SHORT
+                ).show()
                 false
             } else {
-                delay >= 15
+                true
             }
         }
         subscriptionAutoUpdate.setOnPreferenceChangeListener { _, newValue ->

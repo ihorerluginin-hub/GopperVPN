@@ -151,6 +151,8 @@ object Key {
     const val SUBSCRIPTION_USER_AGENT = "subscriptionUserAgent"
     const val SUBSCRIPTION_AUTO_UPDATE = "subscriptionAutoUpdate"
     const val SUBSCRIPTION_AUTO_UPDATE_DELAY = "subscriptionAutoUpdateDelay"
+    const val SUBSCRIPTION_GLOBAL_AUTO_UPDATE = "subscriptionGlobalAutoUpdate"
+    const val SUBSCRIPTION_GLOBAL_AUTO_UPDATE_DELAY = "subscriptionGlobalAutoUpdateDelay"
 
     //
 
