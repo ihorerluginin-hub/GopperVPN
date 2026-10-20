@@ -12,16 +12,21 @@ import kotlin.system.exitProcess
 
 private val Project.android get() = extensions.getByName<ApplicationExtension>("android")
 
-private lateinit var metadata: Properties
 private lateinit var localProperties: Properties
 
+/**
+ * Метаданные из nb4a.properties.
+ *
+ * Файл читается заново при каждом вызове: если держать разобранные
+ * свойства в статическом поле, они переживают сборку в демоне Gradle
+ * (загрузчик классов buildSrc кэшируется), и смена версии или package
+ * после правки файла не подхватывается — сборка молча собирает старый
+ * вариант.
+ */
 fun Project.requireMetadata(): Properties {
-    if (!::metadata.isInitialized) {
-        metadata = Properties().apply {
-            load(rootProject.file("nb4a.properties").inputStream())
-        }
+    return Properties().apply {
+        load(rootProject.file("nb4a.properties").inputStream())
     }
-    return metadata
 }
 
 fun Project.requireLocalProperties(): Properties {
