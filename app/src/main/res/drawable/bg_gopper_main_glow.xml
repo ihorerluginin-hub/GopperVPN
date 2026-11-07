@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Обновлённый дизайн «Гоппер VPN»: мягкое зелёное свечение за круглой
+  кнопкой подключения. Радиальный градиент на весь экран, центр — на
+  высоте кнопки (~16% высоты). Свечение не двигает ничего, просто
+  подсвечивает фон: тень кнопки и её градиент на нём читаются.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:centerX="0.5"
+        android:centerY="0.16"
+        android:endColor="#00000000"
+        android:gradientRadius="420dp"
+        android:startColor="#3E6FCB9C"
+        android:type="radial" />
+</shape>

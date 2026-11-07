@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Обновлённый дизайн «Гоппер VPN»: фон всплывающих меню (шестерёнка,
+  троеточие, «поделиться»). Скруглённая панель цвета gopper_surface_elevated
+  с едва заметной обводкой, чтобы читалась на любом фоне.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="16dp" />
+    <solid android:color="@color/gopper_surface_elevated" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/gopper_card_stroke" />
+</shape>

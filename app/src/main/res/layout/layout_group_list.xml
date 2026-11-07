@@ -21,6 +21,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@drawable/bg_gopper_main_glow"
         android:orientation="vertical">
 
         <!-- Панель закреплена -->
@@ -103,7 +104,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/refresh_all_button"
-                    style="?attr/materialButtonOutlinedStyle"
+                    style="@style/Widget.Gopper.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="6dp"
@@ -118,7 +119,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/ping_all_button"
-                    style="?attr/materialButtonOutlinedStyle"
+                    style="@style/Widget.Gopper.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="6dp"
@@ -133,7 +134,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/fastest_button"
-                    style="?attr/materialButtonOutlinedStyle"
+                    style="@style/Widget.Gopper.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:maxLines="1"

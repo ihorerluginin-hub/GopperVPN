@@ -114,6 +114,9 @@ class StatsBar @JvmOverloads constructor(
             delay(100L)
             activity.whenStarted { what() }
         }
+        // Гоппер VPN: панель трафика появляется только при подключении.
+        // Пока VPN не подключён, панель спрятана — статус виден на других
+        // элементах экрана. При подключении панель прячется при прокрутке.
         if ((state == BaseService.State.Connected).also { hideOnScroll = it }) {
             postWhenStarted {
                 if (allowShow) performShow()

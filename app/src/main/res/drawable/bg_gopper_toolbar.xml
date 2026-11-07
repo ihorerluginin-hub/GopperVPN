@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Обновлённый дизайн «Гоппер VPN»: тулбар с вертикальным градиентом.
+  Сверу gopper_700 — сливается со статус-баром (colorPrimaryDark),
+  книзу светлеет до gopper_500 — панель получает объём вместо плоскости.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="270"
+        android:endColor="@color/gopper_500"
+        android:startColor="@color/gopper_700" />
+</shape>

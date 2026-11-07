@@ -46,6 +46,17 @@
     <color name="gopper_800">#063F27</color>
     <color name="gopper_accent_200">#7BE3AF</color>
 
+    <!-- Обновлённый дизайн «Гоппер VPN»: поверхности и обводки.
+         Здесь светлые значения; тёмные варианты лежат в values-night.
+         gopper_surface красит карточки (colorSurface в теме),
+         gopper_surface_elevated — меню и диалоги. -->
+    <color name="gopper_window_bg">#F4F7F5</color>
+    <color name="gopper_surface">#FFFFFF</color>
+    <color name="gopper_surface_elevated">#FFFFFF</color>
+    <color name="gopper_card_stroke">#12000000</color>
+    <color name="gopper_tonal_bg">#0F0B8A4B</color>
+    <color name="gopper_tonal_text">#0A7040</color>
+
     <color name="material_amber_100">#FFECB3</color>
     <color name="material_amber_200">#FFE082</color>
     <color name="material_amber_300">#FFD54F</color>

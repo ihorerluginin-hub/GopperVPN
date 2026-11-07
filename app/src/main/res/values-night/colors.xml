@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="fab_color_progress">@color/material_light_white</color>
-    <color name="preference_simple_menu_background">#303030</color>
+    <color name="preference_simple_menu_background">#1E2420</color>
+
+    <!-- Обновлённый дизайн «Гоппер VPN»: тёмные поверхности.
+         Фон заметно светлее чёрного — иначе не читаются тень кнопки
+         и свечение за ней; карточки ещё светлее фона, панели — над ними. -->
+    <color name="gopper_window_bg">#121713</color>
+    <color name="gopper_surface">#1C231E</color>
+    <color name="gopper_surface_elevated">#242C26</color>
+    <color name="gopper_card_stroke">#14FFFFFF</color>
+    <color name="gopper_tonal_bg">#2235B97B</color>
+    <color name="gopper_tonal_text">#7BE3AF</color>
 </resources>

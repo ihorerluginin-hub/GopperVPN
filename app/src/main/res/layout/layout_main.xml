@@ -47,9 +47,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:nextFocusUp="@+id/fab"
-        app:backgroundTint="?colorMaterial300"
+        app:backgroundTint="@color/gopper_300"
         app:contentInsetStart="0dp"
-        app:hideOnScroll="true"
         app:layout_scrollFlags="enterAlways|scroll">
 
         <LinearLayout
@@ -67,7 +66,7 @@
                 android:layout_gravity="fill_horizontal"
                 android:ellipsize="marquee"
                 android:singleLine="true"
-                android:textColor="?whiteOrTextPrimary"
+                android:textColor="@color/gopper_800"
                 android:textSize="14sp" />
 
             <TextView
@@ -78,7 +77,7 @@
                 android:layout_gravity="fill_horizontal"
                 android:ellipsize="marquee"
                 android:singleLine="true"
-                android:textColor="?whiteOrTextPrimary"
+                android:textColor="@color/gopper_800"
                 android:textSize="14sp" />
 
             <TextView
@@ -89,7 +88,7 @@
                 android:layout_gravity="fill_horizontal"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="?whiteOrTextPrimary"
+                android:textColor="@color/gopper_800"
                 android:textSize="16sp"
                 tools:text="@string/connection_test_available" />
 
