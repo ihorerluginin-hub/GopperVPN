@@ -114,12 +114,10 @@ class StatsBar @JvmOverloads constructor(
             delay(100L)
             activity.whenStarted { what() }
         }
-        // Гоппер VPN: панель трафика — выскакивающая. При подключении
-        // выезжает снизу поверх списка и висит, при отключении уезжает.
-        // allowShow уважается: на чужих экранах панель может быть спрятана
-        // настройкой showBottomBar (см. MainActivity.displayFragment).
-        hideOnScroll = false
-        if (state == BaseService.State.Connected) {
+        // Гоппер VPN: панель трафика появляется только при подключении.
+        // Пока VPN не подключён, панель спрятана — статус виден на других
+        // элементах экрана. При подключении панель прячется при прокрутке.
+        if ((state == BaseService.State.Connected).also { hideOnScroll = it }) {
             postWhenStarted {
                 if (allowShow) performShow()
                 // Гоппер VPN: название сервера убрано из системного уведомления,
@@ -128,7 +126,7 @@ class StatsBar @JvmOverloads constructor(
             }
         } else {
             postWhenStarted {
-                if (allowShow) performHide()
+                performHide()
             }
             updateSpeed(0, 0)
             setStatus(

@@ -325,13 +325,7 @@ class MainActivity : ThemedActivity(),
 
     @SuppressLint("CommitTransaction")
     fun displayFragment(fragment: ToolbarFragment) {
-        // Гоппер VPN: панель трафика на главном экране видна всегда; на
-        // чужих экранах прячется, только если выключена настройка
-        // showBottomBar. allowShow нужно возвращать при уходе с чужого
-        // экрана, иначе панель на главном так и останется спрятанной.
-        if (fragment is ConfigurationFragment || DataStore.showBottomBar) {
-            binding.stats.allowShow = true
-        } else {
+        if (fragment !is ConfigurationFragment && !DataStore.showBottomBar) {
             binding.stats.allowShow = false
             binding.stats.performHide()
         }
