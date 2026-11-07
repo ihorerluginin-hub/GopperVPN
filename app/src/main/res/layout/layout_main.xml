@@ -41,11 +41,19 @@
         app:pressedTranslationZ="6dp"
         app:srcCompat="@drawable/ic_service_idle" />
 
+    <!-- Гоппер VPN: панель трафика — выскакивающая плавающая карточка.
+         Не на всю ширину: отступы от краёв, скругление 20dp, при
+         подключении выезжает снизу поверх списка, при отключении
+         уезжает (changeState в StatsBar). -->
     <io.nekohasekai.sagernet.widget.StatsBar
         android:id="@+id/stats"
+        style="@style/Widget.Gopper.StatsBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="14dp"
         android:nextFocusUp="@+id/fab"
         app:backgroundTint="@color/gopper_300"
         app:contentInsetStart="0dp"

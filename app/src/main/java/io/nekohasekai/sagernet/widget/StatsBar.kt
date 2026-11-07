@@ -114,8 +114,8 @@ class StatsBar @JvmOverloads constructor(
             delay(100L)
             activity.whenStarted { what() }
         }
-        // Гоппер VPN: панель трафика видна всегда — и до, и после подключения.
-        // В отключённом состоянии показывает «Не подключено» и нулевые скорости.
+        // Гоппер VPN: панель трафика — выскакивающая. При подключении
+        // выезжает снизу поверх списка и висит, при отключении уезжает.
         // allowShow уважается: на чужих экранах панель может быть спрятана
         // настройкой showBottomBar (см. MainActivity.displayFragment).
         hideOnScroll = false
@@ -128,7 +128,7 @@ class StatsBar @JvmOverloads constructor(
             }
         } else {
             postWhenStarted {
-                if (allowShow) performShow()
+                if (allowShow) performHide()
             }
             updateSpeed(0, 0)
             setStatus(

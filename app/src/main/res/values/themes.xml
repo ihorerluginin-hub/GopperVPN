@@ -181,6 +181,20 @@
         <item name="cornerRadius">999dp</item>
     </style>
 
+    <!-- Выскакивающая панель трафика: плавающая карточка со скруглением
+         всех углов. Показывается поверх списка при подключении
+         (changeState в StatsBar), уезжает при отключении. -->
+    <style name="Widget.Gopper.StatsBar" parent="Widget.MaterialComponents.BottomAppBar">
+        <item name="shapeAppearance">@style/ShapeAppearance.Gopper.StatsBar</item>
+        <item name="fabCradleMargin">0dp</item>
+        <item name="fabCradleRoundedCornerRadius">0dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Gopper.StatsBar" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+
     <style name="ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet">
         <item name="buttonBarPositiveButtonStyle">
             @style/Widget.MaterialComponents.Button.TextButton.Dialog.Primary
