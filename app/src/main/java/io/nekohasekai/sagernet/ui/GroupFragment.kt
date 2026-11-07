@@ -372,6 +372,26 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
                         .setNegativeButton(android.R.string.cancel, null)
                         .show()
                 }
+
+                // Гоппер VPN: удалить группу целиком — вместе с её серверами.
+                // Подтверждение обязательно: действие необратимо, undo-снекбар
+                // возвращает только строку списка, а не данные.
+                R.id.action_delete_group -> {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(R.string.group_delete)
+                        .setMessage(
+                            requireContext().getString(
+                                R.string.group_delete_confirm_prompt
+                            ) + "\n" + proxyGroup.displayName()
+                        )
+                        .setPositiveButton(R.string.delete) { _, _ ->
+                            runOnDefaultDispatcher {
+                                GroupManager.deleteGroup(listOf(proxyGroup))
+                            }
+                        }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+                }
             }
 
             return true
@@ -405,6 +425,11 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
                 if (proxyGroup.type != GroupType.SUBSCRIPTION) {
                     popup.menu.removeItem(R.id.action_share_subscription)
+                }
+                // «Без группы» не удаляется: туда сваливаются серверы без
+                // подписки, группы у неё нет.
+                if (proxyGroup.ungrouped) {
+                    popup.menu.removeItem(R.id.action_delete_group)
                 }
                 popup.setOnMenuItemClickListener(this)
                 popup.show()

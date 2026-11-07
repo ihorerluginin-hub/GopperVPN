@@ -179,6 +179,7 @@
 <string name="group_create_subscription">Создать подписку</string>
 <string name="group_default">Разгруппировано</string>
 <string name="group_delete_confirm_prompt">Вы уверены, что хотите удалить эту группу?</string>
+<string name="group_delete">Удалить группу</string>
 <string name="group_deleted">Удалено: 
 %s</string>
 <string name="group_diff">различия (%s)</string>
