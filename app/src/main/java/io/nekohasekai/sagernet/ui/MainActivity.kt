@@ -91,6 +91,23 @@ class MainActivity : ThemedActivity(),
 
         if (savedInstanceState == null) {
             displayFragmentWithId(R.id.nav_configuration)
+        } else {
+            // После recreate (например, при смене темы) фрагмент
+            // восстанавливается сам, но currentDestinationId сбрасывается
+            // на дефолт. Из-за этого BACK и пункт меню «Конфигурация»
+            // считали, что главный экран уже открыт, и не переключались:
+            // активность залипала на настройках. Восстанавливаем
+            // текущий экран по восстановленному фрагменту.
+            currentDestinationId = when (supportFragmentManager
+                .findFragmentById(R.id.fragment_holder)) {
+                is GroupFragment -> R.id.nav_group
+                is RouteFragment -> R.id.nav_route
+                is SettingsFragment -> R.id.nav_settings
+                is WebviewFragment -> R.id.nav_traffic
+                is ToolsFragment -> R.id.nav_tools
+                is AboutFragment -> R.id.nav_about
+                else -> R.id.nav_configuration
+            }
         }
         onBackPressedDispatcher.addCallback {
             if (supportFragmentManager.findFragmentById(R.id.fragment_holder) is ConfigurationFragment) {
