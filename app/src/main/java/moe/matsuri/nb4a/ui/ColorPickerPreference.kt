@@ -22,6 +22,7 @@ import androidx.preference.PreferenceViewHolder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.getColorAttr
 import kotlin.math.roundToInt
 
@@ -132,17 +133,18 @@ class ColorPickerPreference
     }
 
     /**
-     * Liquid Glass: окно пикера становится стеклянным — размытие
-     * содержимого под ним и полупрозрачная панель вместо непрозрачной
-     * карточки. Только Android 12+ и только если система реально
-     * включает кросс-оконное размытие; при любой неудаче диалог
-     * остаётся обычным непрозрачным — это чистая косметика.
+     * Liquid Glass: окно пикера становится стеклянным — полупрозрачная
+     * панель вместо непрозрачной карточки; на Android 12+ с включённым
+     * кросс-оконным размытием под ней ещё и размывается содержимое.
+     * При любой неудаче диалог остаётся обычным непрозрачным — это
+     * чистая косметика.
      */
     private fun applyGlassWindow(dialog: AlertDialog) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
         val window = dialog.window ?: return
         try {
-            if (!window.windowManager.isCrossWindowBlurEnabled) return
+            val blurEnabled = window.windowManager.isCrossWindowBlurEnabled
+            Logs.w("glass picker: crossWindowBlur=$blurEnabled")
 
             val factor = context.resources.displayMetrics.density
             // Селекторы с ?attr надуваются только с темой: getColorStateList
@@ -157,10 +159,13 @@ class ColorPickerPreference
                 setColor(glass)
                 setStroke((1 * factor).roundToInt(), edge)
             })
-            window.setBackgroundBlurRadius(30)
-            window.setDimAmount(0.25f)
-        } catch (_: Exception) {
+            if (blurEnabled) {
+                window.setBackgroundBlurRadius(30)
+                window.setDimAmount(0.25f)
+            }
+        } catch (e: Exception) {
             // Размытие не получилось — остаётся штатный непрозрачный диалог.
+            Logs.w("glass picker failed: $e")
         }
     }
 }
