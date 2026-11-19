@@ -92,4 +92,7 @@ dependencies {
     ksp("com.github.MatrixDev.Roomigrant:RoomigrantCompiler:0.3.4")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+
+    // Гоппер VPN: юнит-тесты (только JVM, в APK не попадают).
+    testImplementation("junit:junit:4.13.2")
 }
