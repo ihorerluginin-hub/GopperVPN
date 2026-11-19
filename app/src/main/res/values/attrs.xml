@@ -10,4 +10,22 @@
     <attr name="fabColorBackground" format="color" />
     <attr name="selectedColorPrimary" format="color" />
     <attr name="whiteOrTextPrimary" format="color" />
+
+    <!-- Цвет текста в нижней панели трафика. По умолчанию — тёмный
+         цвет темы (colorPrimaryDark), у «чёрной» темы текст светлый.
+         Прямо colorPrimaryDark использовать нельзя: у Black-темы он
+         совпадает с фоном панели, и текст становится невидимым. -->
+    <attr name="statsBarTextColor" format="color" />
+
+    <!-- Тёмные ли значки в статус-баре. Включается у светлых тем
+         (жёлтая, лаймовая, янтарная): их colorPrimaryDark светлый,
+         и белые значки на нём не видны. Ссылается на
+         android:windowLightStatusBar, который появился в API 23:
+         на старых системах атрибут просто игнорируется. -->
+    <attr name="lightStatusBarIcons" format="boolean" />
+
+    <!-- Цвет круглой кнопки подключения в состоянии «подключается».
+         У каждой темы свой промежуточный тон (400-й оттенок палитры);
+         раньше он был жёстко зелёным при любой теме. -->
+    <attr name="connectingColor" format="color" />
 </resources>

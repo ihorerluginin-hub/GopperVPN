@@ -3,6 +3,7 @@ package moe.matsuri.nb4a.ui
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
@@ -19,6 +20,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.nekohasekai.sagernet.R
+import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.getColorAttr
 import kotlin.math.roundToInt
 
@@ -86,17 +88,27 @@ class ColorPickerPreference
             columnCount = 4
 
             val colors = context.resources.getIntArray(R.array.material_colors)
+            val selectedTheme = DataStore.appTheme
+            val factor = context.resources.displayMetrics.density
             var i = 0
 
             for (color in colors) {
                 i++ //Theme.kt
 
                 val themeId = i
-                val view = getNekoImageViewAtColor(color, 64, 0).apply {
+                val view = getNekoImageViewAtColor(color, 64, 8).apply {
                     setOnClickListener {
                         persistInt(themeId)
                         dialog.dismiss()
                         callChangeListener(themeId)
+                    }
+                    // Рамка вокруг текущей темы: без неё в сетке из
+                    // 22 кружков не видно, какая тема выбрана сейчас.
+                    if (themeId == selectedTheme) {
+                        background = GradientDrawable().apply {
+                            shape = GradientDrawable.OVAL
+                            setStroke((3 * factor).roundToInt(), context.getColorAttr(R.attr.colorAccent))
+                        }
                     }
                 }
                 addView(view)

@@ -62,6 +62,23 @@ abstract class ThemedActivity : AppCompatActivity {
         }
     }
 
+    /**
+     * Если тему сменили в настройках, то настройки пересоздаются сразу,
+     * а остальные открытые активности (например, главный экран) остаются
+     * со старыми цветами до перезапуска приложения. Здесь каждый экран
+     * при возврате на передний план сверяет свою тему с сохранённой
+     * и при расхождении пересоздаётся сам.
+     */
+    override fun onResume() {
+        super.onResume()
+
+        if (themeResId == 0) return
+        val expected = if (isDialog) Theme.getDialogTheme() else Theme.getTheme()
+        if (themeResId != expected) {
+            ActivityCompat.recreate(this)
+        }
+    }
+
     fun snackbar(@StringRes resId: Int): Snackbar = snackbar("").setText(resId)
     fun snackbar(text: CharSequence): Snackbar = snackbarInternal(text).apply {
         view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text).apply {

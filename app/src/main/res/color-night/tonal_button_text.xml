@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Текст и значок тональных кнопок, тёмный режим: светлый акцент темы.
+  Для «Гоппера» это точный прежний #7BE3AF (gopper_accent_200).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorAccent" />
+</selector>

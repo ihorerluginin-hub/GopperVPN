@@ -37,6 +37,15 @@
         <item name="tabRippleColor">@color/white</item>
         <item name="whiteOrTextPrimary">@color/white</item>
 
+        <!-- Текст нижней панели трафика и значки статус-бара.
+             Значения по умолчанию рассчитаны на «Гоппер» и другие
+             тёмные палитры; светлые темы переопределяют их в своих
+             стилях. -->
+        <item name="statsBarTextColor">?colorPrimaryDark</item>
+        <item name="lightStatusBarIcons">false</item>
+        <item name="android:windowLightStatusBar">?attr/lightStatusBarIcons</item>
+        <item name="connectingColor">@color/material_pink_400</item>
+
         <item name="windowActionModeOverlay">true</item>
 
         <!-- Remove ActionBar but keep styles and themes -->
@@ -165,20 +174,32 @@
         <item name="cornerSize">22dp</item>
     </style>
 
-    <!-- Мягкая тональная кнопка: подложка — прозрачный зелёный, текст и
-         иконка — фирменный зелёный. Используется в ряду под кнопкой
-         подключения. -->
+    <!-- Мягкая тональная кнопка: подложка — прозрачный основной цвет
+         темы, текст и иконка — тёмный (днём) или акцентный (ночью)
+         оттенок той же темы. Используется в ряду под кнопкой
+         подключения. Раньше цвета были жёстко зелёными и не следовали
+         за выбранной темой. -->
     <style name="Widget.Gopper.TonalButton" parent="Widget.MaterialComponents.Button.UnelevatedButton">
         <item name="android:textAllCaps">false</item>
         <item name="android:textSize">13sp</item>
-        <item name="android:textColor">@color/gopper_tonal_text</item>
-        <item name="backgroundTint">@color/gopper_tonal_bg</item>
-        <item name="iconTint">@color/gopper_tonal_text</item>
-        <item name="rippleColor">@color/gopper_tonal_bg</item>
+        <item name="android:textColor">@color/tonal_button_text</item>
+        <item name="backgroundTint">@color/tonal_button_bg</item>
+        <item name="iconTint">@color/tonal_button_text</item>
+        <item name="rippleColor">@color/tonal_button_bg</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:minHeight">40dp</item>
         <item name="cornerRadius">999dp</item>
+    </style>
+
+    <!-- Оверлей тулбара для светлых тем (жёлтая, лаймовая и т.д.):
+         у них colorPrimary светлый, и белые значки с заголовком на
+         таком фоне не читаются. Ставит тёмные значки и текст. -->
+    <style name="ThemeOverlay.Gopper.ActionBar.Light" parent="ThemeOverlay.MaterialComponents.ActionBar">
+        <item name="android:textColorPrimary">#DE000000</item>
+        <item name="titleTextColor">#DE000000</item>
+        <item name="subtitleTextColor">#99000000</item>
+        <item name="colorControlNormal">#B3000000</item>
     </style>
 
     <style name="ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet">
@@ -216,6 +237,7 @@
         <item name="colorAccent">@color/material_pink_accent_200</item>
         <item name="colorMaterial100">@color/material_pink_accent_100</item>
         <item name="colorMaterial300">@color/color_pink_ssr</item>
+        <item name="connectingColor">@color/color_pink_ssr</item>
     </style>
 
     <style name="Theme.SagerNet.Amber">
@@ -224,6 +246,16 @@
         <item name="colorAccent">@color/material_amber_accent_200</item>
         <item name="colorMaterial100">@color/material_amber_100</item>
         <item name="colorMaterial300">@color/material_amber_300</item>
+        <item name="connectingColor">@color/material_amber_400</item>
+        <!-- Светлая палитра: панель трафика читается тёмным нейтральным
+             текстом, значки статус-бара и тулбар — тёмные. -->
+        <item name="statsBarTextColor">@color/material_light_black</item>
+        <item name="lightStatusBarIcons">true</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.Gopper.ActionBar.Light</item>
+        <item name="tabTextColor">#99000000</item>
+        <item name="tabSelectedTextColor">@color/material_light_black</item>
+        <item name="tabIndicatorColor">#B3000000</item>
+        <item name="tabRippleColor">#33000000</item>
     </style>
 
     <style name="Theme.SagerNet.Blue">
@@ -232,6 +264,7 @@
         <item name="colorAccent">@color/material_blue_accent_200</item>
         <item name="colorMaterial100">@color/material_blue_100</item>
         <item name="colorMaterial300">@color/material_blue_300</item>
+        <item name="connectingColor">@color/material_blue_400</item>
     </style>
 
     <style name="Theme.SagerNet.BlueGrey">
@@ -240,6 +273,7 @@
         <item name="colorAccent">@color/material_blue_grey_200</item>
         <item name="colorMaterial100">@color/material_blue_grey_100</item>
         <item name="colorMaterial300">@color/material_blue_grey_300</item>
+        <item name="connectingColor">@color/material_blue_grey_400</item>
     </style>
 
     <style name="Theme.SagerNet.Brown">
@@ -248,6 +282,7 @@
         <item name="colorAccent">@color/material_brown_200</item>
         <item name="colorMaterial100">@color/material_brown_100</item>
         <item name="colorMaterial300">@color/material_brown_300</item>
+        <item name="connectingColor">@color/material_brown_400</item>
     </style>
 
     <style name="Theme.SagerNet.Cyan">
@@ -256,6 +291,13 @@
         <item name="colorAccent">@color/material_cyan_accent_200</item>
         <item name="colorMaterial100">@color/material_cyan_100</item>
         <item name="colorMaterial300">@color/material_cyan_300</item>
+        <item name="connectingColor">@color/material_cyan_400</item>
+        <item name="statsBarTextColor">@color/material_light_black</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.Gopper.ActionBar.Light</item>
+        <item name="tabTextColor">#99000000</item>
+        <item name="tabSelectedTextColor">@color/material_light_black</item>
+        <item name="tabIndicatorColor">#B3000000</item>
+        <item name="tabRippleColor">#33000000</item>
     </style>
 
     <style name="Theme.SagerNet.DeepOrange">
@@ -264,6 +306,7 @@
         <item name="colorAccent">@color/material_deep_orange_accent_200</item>
         <item name="colorMaterial100">@color/material_deep_orange_100</item>
         <item name="colorMaterial300">@color/material_deep_orange_300</item>
+        <item name="connectingColor">@color/material_deep_orange_400</item>
     </style>
 
     <style name="Theme.SagerNet.DeepPurple">
@@ -272,6 +315,7 @@
         <item name="colorAccent">@color/material_deep_purple_accent_200</item>
         <item name="colorMaterial100">@color/material_deep_purple_100</item>
         <item name="colorMaterial300">@color/material_deep_purple_300</item>
+        <item name="connectingColor">@color/material_deep_purple_400</item>
     </style>
 
     <style name="Theme.SagerNet.Green">
@@ -280,6 +324,7 @@
         <item name="colorAccent">@color/material_green_accent_200</item>
         <item name="colorMaterial100">@color/material_green_100</item>
         <item name="colorMaterial300">@color/material_green_300</item>
+        <item name="connectingColor">@color/material_green_400</item>
     </style>
 
     <style name="Theme.SagerNet.Grey">
@@ -288,6 +333,12 @@
         <item name="colorAccent">@color/material_grey_200</item>
         <item name="colorMaterial100">@color/material_grey_100</item>
         <item name="colorMaterial300">@color/material_grey_300</item>
+        <item name="connectingColor">@color/material_grey_400</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.Gopper.ActionBar.Light</item>
+        <item name="tabTextColor">#99000000</item>
+        <item name="tabSelectedTextColor">@color/material_light_black</item>
+        <item name="tabIndicatorColor">#B3000000</item>
+        <item name="tabRippleColor">#33000000</item>
     </style>
 
     <style name="Theme.SagerNet.Indigo">
@@ -296,6 +347,7 @@
         <item name="colorAccent">@color/material_indigo_accent_200</item>
         <item name="colorMaterial100">@color/material_indigo_100</item>
         <item name="colorMaterial300">@color/material_indigo_300</item>
+        <item name="connectingColor">@color/material_indigo_400</item>
     </style>
 
     <style name="Theme.SagerNet.LightBlue">
@@ -304,6 +356,12 @@
         <item name="colorAccent">@color/material_light_blue_accent_200</item>
         <item name="colorMaterial100">@color/material_light_blue_100</item>
         <item name="colorMaterial300">@color/material_light_blue_300</item>
+        <item name="connectingColor">@color/material_light_blue_400</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.Gopper.ActionBar.Light</item>
+        <item name="tabTextColor">#99000000</item>
+        <item name="tabSelectedTextColor">@color/material_light_black</item>
+        <item name="tabIndicatorColor">#B3000000</item>
+        <item name="tabRippleColor">#33000000</item>
     </style>
 
     <style name="Theme.SagerNet.LightGreen">
@@ -312,6 +370,13 @@
         <item name="colorAccent">@color/material_light_green_accent_200</item>
         <item name="colorMaterial100">@color/material_light_green_100</item>
         <item name="colorMaterial300">@color/material_light_green_300</item>
+        <item name="connectingColor">@color/material_light_green_400</item>
+        <item name="statsBarTextColor">@color/material_light_black</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.Gopper.ActionBar.Light</item>
+        <item name="tabTextColor">#99000000</item>
+        <item name="tabSelectedTextColor">@color/material_light_black</item>
+        <item name="tabIndicatorColor">#B3000000</item>
+        <item name="tabRippleColor">#33000000</item>
     </style>
 
     <style name="Theme.SagerNet.Lime">
@@ -320,6 +385,14 @@
         <item name="colorAccent">@color/material_lime_accent_200</item>
         <item name="colorMaterial100">@color/material_lime_100</item>
         <item name="colorMaterial300">@color/material_lime_300</item>
+        <item name="connectingColor">@color/material_lime_400</item>
+        <item name="statsBarTextColor">@color/material_light_black</item>
+        <item name="lightStatusBarIcons">true</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.Gopper.ActionBar.Light</item>
+        <item name="tabTextColor">#99000000</item>
+        <item name="tabSelectedTextColor">@color/material_light_black</item>
+        <item name="tabIndicatorColor">#B3000000</item>
+        <item name="tabRippleColor">#33000000</item>
     </style>
 
     <style name="Theme.SagerNet.Orange">
@@ -328,6 +401,7 @@
         <item name="colorAccent">@color/material_orange_accent_200</item>
         <item name="colorMaterial100">@color/material_orange_100</item>
         <item name="colorMaterial300">@color/material_orange_300</item>
+        <item name="connectingColor">@color/material_orange_400</item>
     </style>
 
     <style name="Theme.SagerNet.Purple">
@@ -336,6 +410,7 @@
         <item name="colorAccent">@color/material_purple_accent_200</item>
         <item name="colorMaterial100">@color/material_purple_100</item>
         <item name="colorMaterial300">@color/material_purple_300</item>
+        <item name="connectingColor">@color/material_purple_400</item>
     </style>
 
     <style name="Theme.SagerNet.Red">
@@ -344,6 +419,7 @@
         <item name="colorAccent">@color/material_red_accent_200</item>
         <item name="colorMaterial100">@color/material_red_100</item>
         <item name="colorMaterial300">@color/material_red_300</item>
+        <item name="connectingColor">@color/material_red_400</item>
     </style>
 
     <style name="Theme.SagerNet.Teal">
@@ -352,6 +428,7 @@
         <item name="colorAccent">@color/material_teal_accent_200</item>
         <item name="colorMaterial100">@color/material_teal_100</item>
         <item name="colorMaterial300">@color/material_teal_300</item>
+        <item name="connectingColor">@color/material_teal_400</item>
     </style>
 
     <style name="Theme.SagerNet.Yellow">
@@ -361,6 +438,14 @@
         <item name="colorMaterial100">@color/material_yellow_100</item>
         <item name="colorMaterial300">@color/material_yellow_300</item>
         <item name="colorOnPrimarySurface">@color/black</item>
+        <item name="connectingColor">@color/material_yellow_400</item>
+        <item name="statsBarTextColor">@color/material_light_black</item>
+        <item name="lightStatusBarIcons">true</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.Gopper.ActionBar.Light</item>
+        <item name="tabTextColor">#99000000</item>
+        <item name="tabSelectedTextColor">@color/material_light_black</item>
+        <item name="tabIndicatorColor">#B3000000</item>
+        <item name="tabRippleColor">#33000000</item>
     </style>
 
     <style name="Theme.SagerNet.Dialog.Amber">
@@ -531,6 +616,11 @@
         <item name="accentOrTextPrimary">?android:textColorPrimary</item>
         <item name="primaryOrTextSecondary">?android:textColorSecondary</item>
         <item name="primaryOrTextPrimary">?android:textColorPrimary</item>
+
+        <item name="connectingColor">@color/color_ng_black_accent</item>
+        <!-- Панель трафика у чёрной темы тёмная (colorMaterial300 =
+             color_ng_black_primary), поэтому текст на ней — светлый. -->
+        <item name="statsBarTextColor">?whiteOrTextPrimary</item>
     </style>
 
     <style name="Theme.SagerNet.Dialog.Black">
@@ -559,6 +649,7 @@
         <item name="colorAccent">@color/gopper_accent_200</item>
         <item name="colorMaterial100">@color/gopper_100</item>
         <item name="colorMaterial300">@color/gopper_300</item>
+        <item name="connectingColor">@color/gopper_400</item>
     </style>
 
     <style name="Theme.SagerNet.Dialog.Gopper">

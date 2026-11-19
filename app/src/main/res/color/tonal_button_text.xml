@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Текст и значок тональных кнопок, светлый режим: тёмный цвет темы.
+  Для «Гоппера» это gopper_700, практически прежний #0A7040.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorPrimaryDark" />
+</selector>

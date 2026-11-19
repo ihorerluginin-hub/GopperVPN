@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Подложка тональных кнопок (ряд под кнопкой подключения, вкладка
+  «Группы»): 6% основного цвета активной темы. Раньше это был
+  жёстко прописанный зелёный #0F0B8A4B, поэтому в других темах
+  кнопки оставались зелёными.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.06" android:color="?attr/colorPrimary" />
+</selector>

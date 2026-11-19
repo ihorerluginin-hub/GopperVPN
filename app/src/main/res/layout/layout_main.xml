@@ -47,7 +47,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:nextFocusUp="@+id/fab"
-        app:backgroundTint="@color/gopper_300"
+        app:backgroundTint="?attr/colorMaterial300"
         app:contentInsetStart="0dp"
         app:layout_scrollFlags="enterAlways|scroll">
 
@@ -66,7 +66,7 @@
                 android:layout_gravity="fill_horizontal"
                 android:ellipsize="marquee"
                 android:singleLine="true"
-                android:textColor="@color/gopper_800"
+                android:textColor="?attr/statsBarTextColor"
                 android:textSize="14sp" />
 
             <TextView
@@ -77,7 +77,7 @@
                 android:layout_gravity="fill_horizontal"
                 android:ellipsize="marquee"
                 android:singleLine="true"
-                android:textColor="@color/gopper_800"
+                android:textColor="?attr/statsBarTextColor"
                 android:textSize="14sp" />
 
             <TextView
@@ -88,7 +88,7 @@
                 android:layout_gravity="fill_horizontal"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/gopper_800"
+                android:textColor="?attr/statsBarTextColor"
                 android:textSize="16sp"
                 tools:text="@string/connection_test_available" />
 

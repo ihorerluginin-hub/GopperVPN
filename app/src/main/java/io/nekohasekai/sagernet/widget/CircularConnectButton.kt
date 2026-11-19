@@ -84,8 +84,13 @@ class CircularConnectButton @JvmOverloads constructor(
 
     private var sweepAnimator: ValueAnimator? = null
 
-    /** Цвет, в который перекрашивается пространство после луча. */
-    private val sweepColor = ContextCompatColor(R.color.gopper_500)
+    /**
+     * Цвет, в который перекрашивается пространство после луча.
+     * Берётся основной цвет активной темы (?attr/colorPrimary):
+     * у «Гоппера» это фирменный зелёный, у остальных тем — их цвет.
+     * Раньше цвет был жёстко зелёным при любой теме.
+     */
+    private val sweepColor = themedColor(R.attr.colorPrimary)
 
     /**
      * Нейтральная заливка на время обхода. Берётся тёмный оттенок того
@@ -119,6 +124,12 @@ class CircularConnectButton @JvmOverloads constructor(
 
     private fun ContextCompatColor(res: Int): Int =
         androidx.core.content.ContextCompat.getColor(context, res)
+
+    private fun themedColor(attr: Int): Int {
+        val typed = TypedValue()
+        context.theme.resolveAttribute(attr, typed, true)
+        return typed.data
+    }
 
     /**
      * Радиус, внутри которого касание считается попаданием в кнопку.

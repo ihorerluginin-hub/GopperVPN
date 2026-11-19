@@ -14,6 +14,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.text.format.Formatter
 import android.text.style.ForegroundColorSpan
+import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -212,6 +213,24 @@ class ConfigurationFragment @JvmOverloads constructor(
         attachCollapseOnScroll(accordion)
         ProfileManager.addListener(adapter)
         GroupManager.addListener(adapter)
+
+        // Гоппер VPN: свечение за кнопкой подключения. Цвет радиального
+        // градиента пересобирается здесь из активной темы
+        // (?attr/colorMaterial300, прежние 24% прозрачности), потому что
+        // в drawable нельзя взять атрибут темы с альфой: XML-версия была
+        // жёстко зелёной и конфликтовала с другими темами.
+        view.findViewById<View>(R.id.glow_background)?.let { glowView ->
+            val typed = TypedValue()
+            requireContext().theme.resolveAttribute(R.attr.colorMaterial300, typed, true)
+            val glow = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
+                ColorUtils.setAlphaComponent(typed.data, 0x3E), Color.TRANSPARENT
+            )).apply {
+                gradientType = GradientDrawable.RADIAL_GRADIENT
+                gradientRadius = 420 * resources.displayMetrics.density
+                setGradientCenter(0.5f, 0.16f)
+            }
+            glowView.background = glow
+        }
 
         // Гоппер VPN: круглая кнопка подключения сверху. Класс не
         // FrameLayout, а CircularConnectButton — он же рисует обход луча.
@@ -1084,7 +1103,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                 BaseService.State.Connected ->
                     ctx.getColorAttr(R.attr.colorPrimary)
                 BaseService.State.Connecting ->
-                    ContextCompat.getColor(ctx, R.color.gopper_400)
+                    // Промежуточный тон своей палитры (attr connectingColor);
+                    // раньше здесь был жёстко зелёный gopper_400.
+                    ctx.getColorAttr(R.attr.connectingColor)
                 else ->
                     ContextCompat.getColor(ctx, R.color.material_red_500)
             }

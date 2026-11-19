@@ -19,6 +19,7 @@
     tools:context=".ui.ConfigurationFragment">
 
     <LinearLayout
+        android:id="@+id/glow_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/bg_gopper_main_glow"

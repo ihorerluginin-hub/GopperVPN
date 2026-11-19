@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Ночная версия подложки тональных кнопок: чуть заметнее, 13%
+  основного цвета темы, иначе на тёмном фоне кнопки теряются.
+  Соответствует прежнему #2235B97B тёмного варианта «Гоппера».
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.13" android:color="?attr/colorPrimary" />
+</selector>
