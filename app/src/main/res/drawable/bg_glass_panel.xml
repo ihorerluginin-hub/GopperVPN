@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Liquid Glass: фон нижней панели трафика.
+  Три слоя: полупрозрачная заливка темы (glass_panel), блик сверху
+  (белая растяжка, чистые статические цвета) и светлая грань по
+  краю (glass_edge). Скругление только сверху — панель прижата к
+  низу экрана. Под панелью скроллится список серверов: содержимое
+  просвечивает, и панель читается как стекло. На старых версиях
+  Android полупрозрачность работает так же — размытие просто не
+  добавляется.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <corners
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="0dp"
+                android:topLeftRadius="22dp"
+                android:topRightRadius="22dp" />
+            <solid android:color="@color/glass_panel" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <corners
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="0dp"
+                android:topLeftRadius="22dp"
+                android:topRightRadius="22dp" />
+            <gradient
+                android:angle="90"
+                android:endColor="#00FFFFFF"
+                android:startColor="#26FFFFFF" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <corners
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="0dp"
+                android:topLeftRadius="22dp"
+                android:topRightRadius="22dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/glass_edge" />
+        </shape>
+    </item>
+</layer-list>

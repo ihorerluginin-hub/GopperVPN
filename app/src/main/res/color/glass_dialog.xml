@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Liquid Glass: стеклянный фон диалога-пикера тем. Ставится окну
+  диалога только на Android 12+, когда кросс-оконное размытие
+  реально включено; иначе диалог остаётся непрозрачным.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.62" android:color="?attr/colorSurface" />
+</selector>

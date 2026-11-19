@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Liquid Glass: заливка нижней панели трафика. 72% светлого цвета
+  темы поверх скроллящегося списка — панель читается как стеклянная,
+  но текст на ней не теряется. Ночной вариант плотнее (80%).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.72" android:color="?attr/colorMaterial300" />
+</selector>

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
@@ -126,5 +127,40 @@ class ColorPickerPreference
             })
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+
+        applyGlassWindow(dialog)
+    }
+
+    /**
+     * Liquid Glass: окно пикера становится стеклянным — размытие
+     * содержимого под ним и полупрозрачная панель вместо непрозрачной
+     * карточки. Только Android 12+ и только если система реально
+     * включает кросс-оконное размытие; при любой неудаче диалог
+     * остаётся обычным непрозрачным — это чистая косметика.
+     */
+    private fun applyGlassWindow(dialog: AlertDialog) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        val window = dialog.window ?: return
+        try {
+            if (!window.windowManager.isCrossWindowBlurEnabled) return
+
+            val factor = context.resources.displayMetrics.density
+            // Селекторы с ?attr надуваются только с темой: getColorStateList
+            // с темой контекста, затем defaultColor.
+            val glass = androidx.core.content.ContextCompat
+                .getColorStateList(context, R.color.glass_dialog)!!.defaultColor
+            val edge = androidx.core.content.ContextCompat
+                .getColorStateList(context, R.color.glass_edge)!!.defaultColor
+            window.setBackgroundDrawable(GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = 22f * factor
+                setColor(glass)
+                setStroke((1 * factor).roundToInt(), edge)
+            })
+            window.setBackgroundBlurRadius(30)
+            window.setDimAmount(0.25f)
+        } catch (_: Exception) {
+            // Размытие не получилось — остаётся штатный непрозрачный диалог.
+        }
     }
 }

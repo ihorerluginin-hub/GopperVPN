@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Liquid Glass: светлая грань по краю стеклянной панели — имитация
+  блика на стекле. Днём слабее, ночью заметнее.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.70" android:color="?attr/colorSurface" />
+</selector>
