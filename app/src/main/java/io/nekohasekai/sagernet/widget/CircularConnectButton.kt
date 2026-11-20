@@ -82,6 +82,14 @@ class CircularConnectButton @JvmOverloads constructor(
     /** Насколько круг уже закрашен лучом: 0 — ничего, 1 — полный оборот. */
     private var sweep = 0f
 
+    /**
+     * Идёт анимация запуска. На всё время луча кнопка блокируется:
+     * касания не доходят ([dispatchTouchEvent]) и повторная активация
+     * невозможна — иначе второй тап перезапускал бы луч и подключение.
+     */
+    var sweeping = false
+        private set
+
     private var sweepAnimator: ValueAnimator? = null
 
     /**
@@ -217,6 +225,8 @@ class CircularConnectButton @JvmOverloads constructor(
      * там и запускается подключение.
      */
     fun startSweep(durationMs: Long, onDone: () -> Unit) {
+        if (sweeping) return
+        sweeping = true
         sweepAnimator?.cancel()
         sweepAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = durationMs
@@ -229,6 +239,7 @@ class CircularConnectButton @JvmOverloads constructor(
                 invalidate()
             }
             doOnEnd {
+                sweeping = false
                 sweep = 0f
                 invalidate()
                 onDone()
@@ -240,8 +251,19 @@ class CircularConnectButton @JvmOverloads constructor(
     fun cancelSweep() {
         sweepAnimator?.cancel()
         sweepAnimator = null
+        sweeping = false
         sweep = 0f
         invalidate()
+    }
+
+    /**
+     * На время анимации запуска кнопка полностью непроницаема:
+     * касания не доходят ни до неё, ни до детей, подсветка нажатия
+     * не появляется — активировать кнопку в это время невозможно.
+     */
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (sweeping) return false
+        return super.dispatchTouchEvent(ev)
     }
 
     /**
