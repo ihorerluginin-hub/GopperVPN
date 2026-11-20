@@ -134,10 +134,10 @@ class ColorPickerPreference
 
     /**
      * Liquid Glass: окно пикера становится стеклянным — полупрозрачная
-     * панель вместо непрозрачной карточки; на Android 12+ с включённым
+     * панель, сквозь которую видны настройки; на Android 12+ с включённым
      * кросс-оконным размытием под ней ещё и размывается содержимое.
-     * При любой неудаче диалог остаётся обычным непрозрачным — это
-     * чистая косметика.
+     * Затемнение ослаблено (0.25) — иначе оно съедает стеклянный эффект.
+     * При любой неудаче диалог остаётся штатным непрозрачным.
      */
     private fun applyGlassWindow(dialog: AlertDialog) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
@@ -159,12 +159,12 @@ class ColorPickerPreference
                 setColor(glass)
                 setStroke((1 * factor).roundToInt(), edge)
             })
+            window.setDimAmount(0.25f)
             if (blurEnabled) {
                 window.setBackgroundBlurRadius(30)
-                window.setDimAmount(0.25f)
             }
         } catch (e: Exception) {
-            // Размытие не получилось — остаётся штатный непрозрачный диалог.
+            // Размытие не получилось — остаётся полупрозрачный диалог.
             Logs.w("glass picker failed: $e")
         }
     }

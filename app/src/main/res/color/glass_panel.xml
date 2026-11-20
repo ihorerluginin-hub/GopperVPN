@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  Liquid Glass: заливка нижней панели трафика. 72% светлого цвета
-  темы поверх скроллящегося списка — панель читается как стеклянная,
-  но текст на ней не теряется. Ночной вариант плотнее (80%).
+  Liquid Glass: заливка нижней панели трафика. Размытие делает
+  RealtimeBlurView, заливка лишь подкрашивает панель цветом темы —
+  поэтому она лёгкая (40%), и содержимое под панелью читается сквозь
+  стекло. Ночной вариант плотнее (68%), чтобы тёмный текст не тонул
+  в размытом тёмном списке.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.72" android:color="?attr/colorMaterial300" />
+    <item android:alpha="0.40" android:color="?attr/colorMaterial300" />
 </selector>

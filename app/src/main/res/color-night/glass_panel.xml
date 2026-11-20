@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  Ночная заливка стеклянной панели: чуть плотнее, чтобы тёмный текст
-  не смешивался с тёмными карточками под панелью.
+  Ночная заливка стеклянной панели: плотнее дневной — тёмный текст
+  не должен тонуть в размытом тёмном списке под панелью.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.80" android:color="?attr/colorMaterial300" />
+    <item android:alpha="0.68" android:color="?attr/colorMaterial300" />
 </selector>

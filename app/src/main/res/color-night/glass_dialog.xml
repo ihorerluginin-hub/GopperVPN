@@ -2,5 +2,5 @@
   Ночной стеклянный фон диалога-пикера тем.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.66" android:color="?attr/colorSurface" />
+    <item android:alpha="0.55" android:color="?attr/colorSurface" />
 </selector>

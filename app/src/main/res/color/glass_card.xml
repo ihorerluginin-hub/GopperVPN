@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  Liquid Glass: заливка карточек серверов. 62% цвета поверхности —
-  сквозь карточку просвечивает фон экрана; светлая грань по краю
-  (glass_edge) завершает стеклянный вид. Ночной вариант плотнее —
-  тёмный текст днём и светлый ночью не теряются.
+  Liquid Glass: заливка карточек серверов. 45% цвета поверхности —
+  карточка заметно прозрачнее старой, фон экрана и свечение
+  просвечивают сквозь неё; светлая грань (glass_edge) завершает
+  стеклянный вид. Ночной вариант плотнее (52%).
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.62" android:color="?attr/colorSurface" />
+    <item android:alpha="0.45" android:color="?attr/colorSurface" />
 </selector>
