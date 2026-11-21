@@ -174,20 +174,19 @@
         <item name="cornerSize">22dp</item>
     </style>
 
-    <!-- Мягкая тональная кнопка: подложка — прозрачный основной цвет
-         темы, текст и иконка — тёмный (днём) или акцентный (ночью)
-         оттенок той же темы. Liquid Glass: светлая грань по краю
-         завершает стеклянный вид. Используется в ряду под кнопкой
-         подключения. Раньше цвета были жёстко зелёными и не следовали
-         за выбранной темой. -->
+    <!-- Мягкая тональная кнопка. Liquid Glass (iOS-стиль): белый
+         матовый тон 30%/22%, яркая грань 1.5dp по краю; текст и
+         иконка — тёмный (днём) или акцентный (ночью) оттенок темы.
+         Используется в ряду под кнопкой подключения. Раньше цвета
+         были жёстко зелёными и не следовали за выбранной темой. -->
     <style name="Widget.Gopper.TonalButton" parent="Widget.MaterialComponents.Button.UnelevatedButton">
         <item name="android:textAllCaps">false</item>
         <item name="android:textSize">13sp</item>
         <item name="android:textColor">@color/tonal_button_text</item>
-        <item name="backgroundTint">@color/tonal_button_bg</item>
+        <item name="backgroundTint">@color/glass_button</item>
         <item name="iconTint">@color/tonal_button_text</item>
-        <item name="rippleColor">@color/tonal_button_bg</item>
-        <item name="strokeWidth">1dp</item>
+        <item name="rippleColor">@color/glass_button</item>
+        <item name="strokeWidth">1.5dp</item>
         <item name="strokeColor">@color/glass_edge</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>

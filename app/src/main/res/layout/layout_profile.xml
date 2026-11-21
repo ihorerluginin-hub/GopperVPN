@@ -14,7 +14,7 @@
     app:cardBackgroundColor="@color/glass_card"
     app:cardCornerRadius="14dp"
     app:cardElevation="4dp"
-    app:strokeWidth="1dp"
+    app:strokeWidth="1.5dp"
     app:strokeColor="@color/glass_edge">
 
     <LinearLayout
@@ -184,5 +184,14 @@
         </LinearLayout>
 
     </LinearLayout>
+
+    <!-- Liquid Glass (iOS-стиль): блик поверх контента карточки.
+         Некликабельный — касания проходят сквозь него к контенту. -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_glass_sheen"
+        android:clickable="false"
+        android:importantForAccessibility="no" />
 
 </com.google.android.material.card.MaterialCardView>

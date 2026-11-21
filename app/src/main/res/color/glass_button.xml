@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Liquid Glass (iOS-стиль): заливка тональных кнопок — белый матовый
+  тон 30%, как на айфоне. Грань и блик добавляются в стиле кнопки.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.30" android:color="?attr/colorSurface" />
+</selector>
