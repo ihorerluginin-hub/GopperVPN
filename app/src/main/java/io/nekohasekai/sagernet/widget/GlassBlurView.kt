@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
@@ -38,7 +39,7 @@ class GlassBlurView @JvmOverloads constructor(
     var blurRadiusDp = 20f
 
     /** Во сколько раз уменьшается снимок перед размытием. */
-    var downsample = 2f
+    var downsample = 6f
 
     private val drawPaint = Paint(Paint.FILTER_BITMAP_FLAG)
 
@@ -52,7 +53,11 @@ class GlassBlurView @JvmOverloads constructor(
     private val preDrawListener = ViewTreeObserver.OnPreDrawListener {
         // Снимок делается ДО записи кадра — рисовать дерево в bitmap
         // во время onDraw рендерер считает битым кадром.
-        if (isShown && width > 0 && height > 0) {
+        //
+        // Размытие только когда панель реально видима: спрятанная
+        // (performHide уводит её за экран) не должна съедать кадры
+        // скролла — иначе прокрутка лагает и дёргается.
+        if (isShown && translationY < height * 0.5f && width > 0 && height > 0) {
             try {
                 renderSnapshot()
             } catch (_: Exception) {
@@ -124,6 +129,8 @@ class GlassBlurView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         if (Build.VERSION.SDK_INT < 31) return
-        snapshot?.let { canvas.drawBitmap(it, 0f, 0f, drawPaint) }
+        val bmp = snapshot ?: return
+        // Снимок меньше вью (downsample) — растягиваем на всю область.
+        canvas.drawBitmap(bmp, null, Rect(0, 0, width, height), drawPaint)
     }
 }
