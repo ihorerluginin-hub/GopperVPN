@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  Ночная грань стеклянной панели: ярче — на тёмном фоне блик
-  должен читаться.
+  Ночная грань стеклянной панели: полная непрозрачность белого —
+  на тёмном фоне блик должен читаться чётко.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.90" android:color="?attr/colorSurface" />
+    <item android:alpha="1.00" android:color="?attr/colorSurface" />
 </selector>

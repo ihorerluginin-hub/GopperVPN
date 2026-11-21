@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  Ночная заливка стеклянных карточек серверов: плотнее дневной.
+  Ночная заливка стеклянных карточек серверов: та же прозрачность,
+  что днём — на тёмной теме стекло видно сквозьняком.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.52" android:color="?attr/colorSurface" />
+    <item android:alpha="0.35" android:color="?attr/colorSurface" />
 </selector>
