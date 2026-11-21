@@ -13,7 +13,7 @@
     android:focusable="true"
     app:cardBackgroundColor="@color/glass_card"
     app:cardCornerRadius="14dp"
-    app:cardElevation="4dp"
+    app:cardElevation="6dp"
     app:strokeWidth="1.5dp"
     app:strokeColor="@color/glass_edge">
 
