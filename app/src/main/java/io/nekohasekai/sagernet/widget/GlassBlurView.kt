@@ -5,12 +5,12 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RenderEffect
-import android.graphics.RenderNode
 import android.graphics.Shader
 import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewTreeObserver
+import io.nekohasekai.sagernet.R
 import kotlin.math.max
 
 /**
@@ -19,71 +19,86 @@ import kotlin.math.max
  * как на iPhone: под панелью скроллится список, и его очертания
  * просвечивают размытыми.
  *
- * Как работает: корневой view окна рисуется в уменьшенную копию
- * (downsample ×4 — cheaper), копия блюрится [RenderEffect] и рисуется
- * в этом view. Всё это — Android 12+ ([RenderNode], [RenderEffect]);
- * на более старых версиях view ничего не рисует, и стеклянная панель
- * остаётся просто полупрозрачной.
+ * Как работает (только Android 12+, [RenderEffect]):
+ * 1. В [onPreDraw] — до записи кадра — содержимое позади панели
+ *    ([R.id.fragment_holder], чтобы в снимок не попала сама панель)
+ *    рисуется в уменьшенную копию.
+ * 2. Копия рисуется этим view в [onDraw].
+ * 3. На самом view стоит [View.setRenderEffect] с блюром — система
+ *    размывает нарисованную копию, и панель читается как стекло.
  *
- * Перерисовка подписана на preDraw корневого дерева — каждый кадр
- * содержимого обновляет размытие. Панель трафика при прокрутке
- * прячется целиком, так что размытие активно в основном в покое.
+ * На Android 11 и ниже view ничего не рисует — панель остаётся просто
+ * полупрозрачной.
  */
 class GlassBlurView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
 ) : View(context, attrs, defStyleAttr) {
 
-    /** Радиус размытия: применяется к уменьшенной копии, поэтому физически в 4 раза больше. */
-    var blurRadiusDp = 14f
+    /** Радиус размытия в dp (лимит системы — 25px, применяется к вью). */
+    var blurRadiusDp = 20f
 
     /** Во сколько раз уменьшается снимок перед размытием. */
-    var downsample = 4f
+    var downsample = 2f
 
     private val drawPaint = Paint(Paint.FILTER_BITMAP_FLAG)
 
-    /** Лениво: класс RenderNode отсутствует на API < 29, поле должно
-     *  инициализироваться только после проверки версии. */
-    private val node by lazy { RenderNode("glassBlur") }
+    /** Что размываем: контент за панелью, без самой панели. */
+    private var backdrop: View? = null
 
     private var snapshot: Bitmap? = null
-
-    /** true, пока корень рисуется в снимок: собственную отрисовку
-     *  в этот момент пропускаем, иначе — бесконечная рекурсия. */
-    private var snapshotting = false
+    private var location = IntArray(2)
+    private var backdropLocation = IntArray(2)
 
     private val preDrawListener = ViewTreeObserver.OnPreDrawListener {
-        // Каждый кадр содержимого = новый снимок. Панель прячется
-        // целиком при прокрутке, так что активна в основном в покое.
+        // Снимок делается ДО записи кадра — рисовать дерево в bitmap
+        // во время onDraw рендерер считает битым кадром.
         if (isShown && width > 0 && height > 0) {
-            postInvalidateOnAnimation()
+            try {
+                renderSnapshot()
+            } catch (_: Exception) {
+                // Косметика: не рисуем кадр с размытием.
+            }
         }
         true
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        if (Build.VERSION.SDK_INT >= 31) {
-            viewTreeObserver.addOnPreDrawListener(preDrawListener)
+        if (Build.VERSION.SDK_INT < 31) return
+
+        backdrop = rootView.findViewById(R.id.fragment_holder)
+        backdrop?.let {
+            it.viewTreeObserver.addOnPreDrawListener(preDrawListener)
+            setRenderEffect(
+                RenderEffect.createBlurEffect(
+                    max(1f, blurRadiusDp * resources.displayMetrics.density),
+                    max(1f, blurRadiusDp * resources.displayMetrics.density),
+                    Shader.TileMode.CLAMP,
+                ),
+            )
         }
     }
 
+    /**
+     * В измерении Toolbar не участвуем (высота 0), иначе панель
+     * раздувается на весь экран. В разметке match_parent: после layout
+     * занимаем всю площадь панели и рисуем размытие в её границах.
+     */
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), 0)
+    }
+
     override fun onDetachedFromWindow() {
+        backdrop?.viewTreeObserver?.removeOnPreDrawListener(preDrawListener)
+        backdrop = null
         if (Build.VERSION.SDK_INT >= 31) {
-            viewTreeObserver.removeOnPreDrawListener(preDrawListener)
+            setRenderEffect(null)
         }
         super.onDetachedFromWindow()
     }
 
-    override fun draw(canvas: Canvas) {
-        // Снимок корня рисует всё дерево, включая этот view; пропускаем
-        // себя, чтобы размытие не рисовало само себя (рекурсия).
-        if (snapshotting) return
-        super.draw(canvas)
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        if (Build.VERSION.SDK_INT < 31) return
-        val root = rootView ?: return
+    private fun renderSnapshot() {
+        val source = backdrop ?: return
         val w = width
         val h = height
         if (w == 0 || h == 0) return
@@ -96,37 +111,19 @@ class GlassBlurView @JvmOverloads constructor(
             snapshot = bmp
         }
 
-        rootLocationAndMine.let { (rootLoc, myLoc) ->
-            root.getLocationInWindow(rootLoc)
-            getLocationInWindow(myLoc)
-            snapshotting = true
-            try {
-                val c = Canvas(bmp)
-                c.scale(1f / downsample, 1f / downsample)
-                c.translate(-(myLoc[0] - rootLoc[0]).toFloat(), -(myLoc[1] - rootLoc[1]).toFloat())
-                root.draw(c)
-            } finally {
-                snapshotting = false
-            }
-        }
-
-        // Размытие через RenderNode: лимит радиуса RenderEffect — 25px,
-        // поэтому блюрится уменьшенная копия (физический радиус ×4).
-        node.setPosition(0, 0, bw, bh)
-        val rc = node.beginRecording()
-        rc.drawBitmap(bmp, 0f, 0f, drawPaint)
-        node.endRecording()
-        node.setRenderEffect(
-            RenderEffect.createBlurEffect(
-                max(1f, blurRadiusDp * context.resources.displayMetrics.density / downsample),
-                max(1f, blurRadiusDp * context.resources.displayMetrics.density / downsample),
-                Shader.TileMode.CLAMP,
-            ),
+        source.getLocationInWindow(backdropLocation)
+        getLocationInWindow(location)
+        val c = Canvas(bmp)
+        c.scale(1f / downsample, 1f / downsample)
+        c.translate(
+            -(location[0] - backdropLocation[0]).toFloat(),
+            -(location[1] - backdropLocation[1]).toFloat(),
         )
-        canvas.drawRenderNode(node)
+        source.draw(c)
     }
 
-    /** Пару массивов для координат — заводятся один раз, чтобы не
-     *  аллоцировать на каждом кадре. */
-    private val rootLocationAndMine = Pair(IntArray(2), IntArray(2))
+    override fun onDraw(canvas: Canvas) {
+        if (Build.VERSION.SDK_INT < 31) return
+        snapshot?.let { canvas.drawBitmap(it, 0f, 0f, drawPaint) }
+    }
 }
