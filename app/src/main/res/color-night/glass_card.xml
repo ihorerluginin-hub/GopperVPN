@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-  Ночная заливка стеклянных карточек: та же белая матовость 30%.
--->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.30" android:color="?attr/colorSurface" />
-</selector>

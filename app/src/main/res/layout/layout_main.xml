@@ -47,16 +47,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:nextFocusUp="@+id/fab"
-        app:backgroundTint="@color/glass_panel"
+        app:backgroundTint="?attr/colorMaterial300"
         app:contentInsetStart="0dp"
         app:layout_scrollFlags="enterAlways|scroll">
-
-        <!-- Liquid Glass: реальное размытие содержимого за панелью.
-             Первый ребёнок — рисуется под текстами и превращает
-             скроллящийся под панелью список в размытое стекло. -->
-        <io.nekohasekai.sagernet.widget.GlassBlurView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
 
         <LinearLayout
             android:layout_width="match_parent"

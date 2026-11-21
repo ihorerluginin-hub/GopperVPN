@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-  Liquid Glass (iOS-стиль): заливка карточек серверов — белый
-  матовый тон 35% поверх просвечивающего фона. Объём даёт оверлей
-  bg_glass_sheen (светлая кромка сверху, затемнение снизу),
-  грань — светлая обводка 1.5dp, тень — elevation 6dp.
--->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.35" android:color="?attr/colorSurface" />
-</selector>
