@@ -48,8 +48,7 @@
         android:layout_gravity="bottom"
         android:nextFocusUp="@+id/fab"
         app:backgroundTint="?attr/colorMaterial300"
-        app:contentInsetStart="0dp"
-        app:layout_scrollFlags="enterAlways|scroll">
+        app:contentInsetStart="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
