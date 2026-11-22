@@ -176,7 +176,6 @@
                 android:id="@+id/accordion_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipChildren="false"
                 android:clipToPadding="false"
                 android:scrollbarSize="0dp"
                 tools:listitem="@layout/layout_accordion_header" />
