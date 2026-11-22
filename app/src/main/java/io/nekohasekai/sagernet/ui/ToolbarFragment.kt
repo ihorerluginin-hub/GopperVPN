@@ -23,7 +23,15 @@ open class ToolbarFragment : Fragment {
         toolbar.setNavigationIcon(R.drawable.ic_action_settings)
         toolbar.setNavigationOnClickListener { anchor ->
             val activity = activity as? MainActivity ?: return@setNavigationOnClickListener
-            PopupMenu(anchor.context, anchor).apply {
+            // Контекст попапа — активити, не тулбар. У тулбара тема
+            // actionBarTheme: у большинства тем это тёмный оверлей
+            // (белые текст и значки), у светлых тем — светлый. Попап же
+            // красится DayNight'ом (белая панель днём, тёмная ночью),
+            // поэтому на светлом варианте тёмных тем пункты были белыми
+            // на белом, а ночью у светлых тем — тёмными на тёмном.
+            // Тема активити следует дню/ночи — так же делают и другие
+            // попапы (ConfigurationFragment, GroupFragment).
+            PopupMenu(requireContext(), anchor).apply {
                 menuInflater.inflate(R.menu.main_gear_menu, menu)
                 activity.refreshGearMenu(menu)
                 setOnMenuItemClickListener { item ->
