@@ -1218,31 +1218,15 @@ class ConfigurationFragment @JvmOverloads constructor(
         val listener = object : RecyclerView.OnScrollListener() {
             override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
                 if (dy == 0) return
-                val root = view ?: return
-                val block = root.findViewById<View>(R.id.top_buttons) ?: return
-                val below = root.findViewById<View>(R.id.bottom_block) ?: return
-                val max = block.height
-                if (max <= 0) return
-                // dy > 0 — список прокрутился вверх, блок сворачивается
-                if (baseBottomHeight == 0) baseBottomHeight = below.height
-                val offset = (collapseOffset + dy).coerceIn(0, max)
-                if (offset == collapseOffset) return
-                // Ручная прокрутка сильнее дотяжки — анимацию возврата глушим
-                collapseAnimator?.cancel()
-                applyCollapse(offset)
+                syncCollapse(rv)
             }
 
             override fun onScrollStateChanged(rv: RecyclerView, newState: Int) {
                 if (newState != RecyclerView.SCROLL_STATE_IDLE) return
-                // Список дошёл до верха, а блок ещё свёрнут. Так бывает,
-                // когда во время прокрутки менялся контент (пинг, обновление
-                // подписки): RecyclerView поджимает позицию, и событий
-                // скролла на возврат остатка уже не приходит — раньше
-                // кнопка так и оставалась наполовину спрятанной. Дотягиваем
-                // блок обратно сами.
-                if (!rv.canScrollVertically(-1) && collapseOffset > 0) {
-                    animateCollapseTo(0)
-                }
+                // Страховка: контент менялся во время прокрутки (пинг,
+                // обновление подписки) — RecyclerView мог поджать позицию
+                // без скролл-событий. Сверяем блок с фактической позицией.
+                syncCollapse(rv)
             }
         }
         listView.addOnScrollListener(listener)
@@ -1254,7 +1238,28 @@ class ConfigurationFragment @JvmOverloads constructor(
     /** Высота нижнего блока при полностью развёрнутом блоке кнопок. */
     private var baseBottomHeight = 0
 
-    private var collapseAnimator: ValueAnimator? = null
+    /**
+     * Гоппер VPN: сдвиг блока кнопок всегда равен позиции списка.
+     *
+     * Раньше offset накапливался из dy и со временем расходился с
+     * фактическим скроллом: во время прокрутки менялся контент (пинг,
+     * обновление подписки), RecyclerView поджимал позиции — и карточки
+     * уезжали под кнопки, а кнопка не возвращалась наверх. Теперь блок
+     * и карточки — единое целое: сдвиг берётся прямо из позиции списка
+     * и ограничивается высотой блока, расхождение невозможно.
+     */
+    private fun syncCollapse(rv: RecyclerView) {
+        val root = view ?: return
+        val block = root.findViewById<View>(R.id.top_buttons) ?: return
+        val below = root.findViewById<View>(R.id.bottom_block) ?: return
+        val max = block.height
+        if (max <= 0) return
+        // dy > 0 — список прокрутился вверх, блок сворачивается
+        if (baseBottomHeight == 0) baseBottomHeight = below.height
+        val target = rv.computeVerticalScrollOffset().coerceIn(0, max)
+        if (target == collapseOffset) return
+        applyCollapse(target)
+    }
 
     /**
      * Гоппер VPN: применить сдвиг сворачивания к разметке.
@@ -1278,18 +1283,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         below.layoutParams = lp
     }
 
-    /** Гоппер VPN: плавно вернуть сворачивание к целевому сдвигу. */
-    private fun animateCollapseTo(target: Int) {
-        collapseAnimator?.cancel()
-        collapseAnimator = ValueAnimator.ofInt(collapseOffset, target).apply {
-            duration = 150
-            addUpdateListener { animator -> applyCollapse(animator.animatedValue as Int) }
-            start()
-        }
-    }
-
     private fun detachCollapseOnScroll() {
-        collapseAnimator?.cancel()
         collapseListener?.let {
             if (::accordion.isInitialized) accordion.removeOnScrollListener(it)
         }
@@ -1298,7 +1292,6 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     /** Гоппер VPN: вернуть блок кнопок на место, например при смене подписки. */
     private fun resetCollapse() {
-        collapseAnimator?.cancel()
         collapseOffset = 0
         val root = view ?: return
         root.findViewById<View>(R.id.top_buttons)?.translationY = 0f
