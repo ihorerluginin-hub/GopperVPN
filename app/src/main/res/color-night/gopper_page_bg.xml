@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Ночной вариант фона главного экрана: тот же бледный тон темы,
+  но сильно приглушённый (16% поверх тёмного окна) — экран не
+  слепит, а оттенок темы всё равно читается.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.16" android:color="?attr/colorMaterial100" />
+</selector>

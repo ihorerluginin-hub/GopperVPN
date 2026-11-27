@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Гоппер VPN: шапка главного списка — первый элемент аккордеона.
+  Кнопка подключения и ряд быстрых действий едут вместе с карточками
+  серверов: прокрутка на палец 1:1, без анимаций и рывков; кнопки
+  возвращаются только физической прокруткой списка до верха.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/top_buttons"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Круглая кнопка подключения. 190dp ≈ 3 см: в Android 1dp = 1/160 дюйма,
+         так что 3 см = 3/2,54*160 ≈ 189dp.
+
+         Класс не FrameLayout, а CircularConnectButton: касание
+         берётся только внутри окружности, тень от elevation по
+         контуру-окружности, отклик круглый. У голого FrameLayout
+         всё это оставалось прямоугольным — в углу квадрата
+         нажималось, тень шла плитой.
+
+         Фон-овал с градиентом задаётся из кода
+         (ConfigurationFragment.updateConnectionUi) — заливка
+         зависит от состояния подключения: серая, пока VPN не
+         подключён; цвет тем connected/connecting состояний
+         живёт в теме. MaterialButton не годится: app:backgroundTint
+         красит его целиком и переход пропадает. -->
+    <io.nekohasekai.sagernet.widget.CircularConnectButton
+        android:id="@+id/connect_button"
+        android:layout_width="190dp"
+        android:layout_height="190dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="10dp"
+        android:clickable="true"
+        android:contentDescription="@string/connect"
+        android:elevation="14dp"
+        android:focusable="true">
+
+        <!-- Высота 133dp, а не квадрат: остриё щита оттянуто на 2 мм, вьюпорт
+             стал 268 × 296.1. Чтобы сам щит остался прежних
+             120dp по ширине, высота пропорционально увеличена.
+
+             translationY 12.6dp — те же 2 мм, но уже сдвиг всего
+             щита внутри кнопки. Именно translationY, а не отступ:
+             отступ двигал бы вью целиком и порвал бы
+             вертикальное центрирование по центру кнопки. -->
+        <ImageView
+            android:id="@+id/connect_icon"
+            android:layout_width="120dp"
+            android:layout_height="133dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_app_mark"
+            android:translationY="12.6dp" />
+
+    </io.nekohasekai.sagernet.widget.CircularConnectButton>
+
+    <!-- Ряд кнопок под кнопкой подключения: обновить все подписки,
+         пинг всех (только спидометр, без надписи), самый быстрый. -->
+    <LinearLayout
+        android:id="@+id/quick_test_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="8dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/refresh_all_button"
+            style="@style/Widget.Gopper.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="@string/update_all_subscription"
+            android:minWidth="0dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            app:icon="@drawable/ic_baseline_refresh_24"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="20dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/ping_all_button"
+            style="@style/Widget.Gopper.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="@string/ping_all_servers"
+            android:minWidth="0dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            app:icon="@drawable/ic_baseline_speed_24"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="20dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/fastest_button"
+            style="@style/Widget.Gopper.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/fastest_server"
+            android:textAllCaps="false"
+            android:textSize="13sp"
+            app:icon="@drawable/ic_baseline_bolt_24"
+            app:iconGravity="textStart"
+            app:iconPadding="6dp"
+            app:iconSize="18dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

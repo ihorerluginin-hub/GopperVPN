@@ -36,7 +36,7 @@ import androidx.preference.PreferenceDataStore
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.ColorUtils
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -155,7 +155,7 @@ class ConfigurationFragment @JvmOverloads constructor(
     lateinit var accordion: RecyclerView
     lateinit var undoManager: UndoSnackbarManager<ProxyEntity>
 
-    val accordionLayoutManager by lazy { FixedLinearLayoutManager(accordion) }
+    val accordionLayoutManager by lazy { FixedLinearLayoutManager(accordion, disableFling = true) }
 
     val alwaysShowAddress by lazy { DataStore.alwaysShowAddress }
 
@@ -202,24 +202,16 @@ class ConfigurationFragment @JvmOverloads constructor(
         // Гоппер VPN: поиск по серверам убран из панели, вместе с ним
         // исчез весь обвязывающий его код — слушатель, отмена и колбэки.
 
-        // Гоппер VPN: список аккордеона. В нём и заголовки подписок, и их
-        // серверы, поэтому сворачивание верхних кнопок вешается на него
-        // напрямую — отдельных списков больше нет.
+        // Гоппер VPN: список аккордеона. В нём шапка с кнопками (первый
+        // элемент), заголовки подписок и их серверы. Инерции нет:
+        // список движется только под пальцем и стоит после отпускания.
         accordion = view.findViewById(R.id.accordion_list)
         accordion.layoutManager = accordionLayoutManager
         adapter = AccordionAdapter()
-        accordion.adapter = adapter
+        // В режиме выбора профиля шапки с кнопками нет — только список.
+        accordion.adapter =
+            if (select) adapter else ConcatAdapter(mainHeaderAdapter, adapter)
         accordion.setItemViewCacheSize(20)
-        // Гоппер VPN: вьюха свежая — сбрасываем состояние сворачивания.
-        // Фрагмент может пережить свою вьюху (detach/attach в onCreate
-        // при пересоздании активити), тогда старые collapseOffset и
-        // baseBottomHeight не совпадут с новой разметкой: кнопка
-        // осталась бы свёрнутой или легла бы криво после первого же
-        // события прокрутки.
-        collapseOffset = 0
-        collapseTarget = 0
-        baseBottomHeight = 0
-        attachCollapseOnScroll(accordion)
         ProfileManager.addListener(adapter)
         GroupManager.addListener(adapter)
 
@@ -238,65 +230,23 @@ class ConfigurationFragment @JvmOverloads constructor(
                 gradientRadius = 420 * resources.displayMetrics.density
                 setGradientCenter(0.5f, 0.16f)
             }
-            glowView.background = glow
+            // Бледный фон темы (gopper_page_bg) остаётся нижним слоем,
+            // свечение ложится поверх него.
+            glowView.background = LayerDrawable(arrayOf(glowView.background, glow))
         }
 
-        // Гоппер VPN: круглая кнопка подключения сверху. Класс не
-        // FrameLayout, а CircularConnectButton — он же рисует обход луча.
-        val connectButton = view.findViewById<CircularConnectButton>(R.id.connect_button)
-        connectButton.isVisible = !select
-        if (!select) {
-            connectButton.setOnClickListener {
-                val activity = activity as? MainActivity ?: return@setOnClickListener
-                // Подключение запускается на полном обороте луча: сначала
-                // круг закрашивается, и только потом VPN поднимается.
-                // Состояние читается здесь, а не берётся из
-                // updateConnectionUi — к моменту тапа оно могло устареть.
-                if (DataStore.serviceState.canStop) {
-                    activity.toggleService()
-                } else {
-                    connectButton.startSweep(SWEEP_DURATION) { activity.toggleService() }
-                }
-            }
-        }
-
-        // Ряд кнопок под кнопкой подключения: обновить все, пинг всех,
-        // самый быстрый. Отдельного «Пинга» для одного сервера больше нет.
-        val quickTestBar = view.findViewById<View>(R.id.quick_test_bar)
-        if (select) {
-            quickTestBar.isVisible = false
-        } else {
-            view.findViewById<MaterialButton>(R.id.refresh_all_button).setOnClickListener {
-                MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.confirm)
-                    .setMessage(R.string.update_all_subscription)
-                    .setPositiveButton(R.string.yes) { _, _ ->
-                        runOnDefaultDispatcher {
-                            SagerDatabase.groupDao.allGroups()
-                                .filter { it.type == GroupType.SUBSCRIPTION }
-                                .forEach { GroupUpdater.startUpdate(it, true) }
-                        }
-                    }
-                    .setNegativeButton(R.string.no, null)
-                    .show()
-            }
-            view.findViewById<MaterialButton>(R.id.ping_all_button).setOnClickListener {
-                pingAllServers()
-            }
-            view.findViewById<MaterialButton>(R.id.fastest_button).setOnClickListener {
-                selectFastestServer()
-            }
-        }
-
-        // Гоппер VPN: перетаскивание серверов внутри подписки. Заголовки
-        // не двигаются, и сервер нельзя перетащить в чужую подписку —
-        // иначе перемешаются их порядки. В режиме выбора профиля
-        // перетаскивание не нужно вовсе.
         if (!select) {
             undoManager = UndoSnackbarManager(activity as MainActivity, adapter)
 
+            // Гоппер VPN: долгое касание больше не двигает серверы — оно
+            // нужно для листания (список и так едет под пальцем, инерции
+            // нет). isLongPressDragEnabled = false отключает захват карточки
+            // длинным тапом, ItemTouchHelper оставлен на случай возврата.
             ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
                 ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.START
             ) {
+                override fun isLongPressDragEnabled(): Boolean = false
+
                 override fun getSwipeDirs(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder,
@@ -342,15 +292,12 @@ class ConfigurationFragment @JvmOverloads constructor(
         (activity as? MainActivity)?.statusListener = { updateConnectionUi() }
         updateConnectionUi()
 
-        // при смене подписки аккордеон перерисовывается
-        adapter.onGroupChanged = {
-            resetCollapse()
-        }
-
         toolbar.setOnClickListener {
             val index = adapter.positionOfProfile(selectedItem?.id ?: DataStore.selectedProxy)
             if (index >= 0) {
-                accordion.scrollToPosition(index)
+                // +1: позиция в аккордеоне — локальная, а в списке перед
+                // ним ещё шапка с кнопками.
+                accordion.scrollToPosition(index + 1)
             } else {
                 accordion.scrollToPosition(0)
             }
@@ -389,8 +336,6 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
 
         (activity as? MainActivity)?.statusListener = null
-
-        detachCollapseOnScroll()
 
         if (::undoManager.isInitialized) undoManager.flush()
 
@@ -1103,11 +1048,10 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         val state = DataStore.serviceState
 
-        // Цвет круглой кнопки подключения: пока VPN не подключён — красный,
-        // подключён — зелёный. Обычная логика «зелёный значит можно
-        // подключать» тут вводила в заблуждение: кнопка меняла цвет
-        // нажатием, а не состоянием.
-        v.findViewById<CircularConnectButton>(R.id.connect_button)?.let { connectButton ->
+        // Цвет круглой кнопки подключения: пока VPN не подключён — нейтральный
+        // серый, подключён — цвет темы. Красный ушёл: он читался как
+        // «ошибка», а не «не подключено».
+        mainHeaderAdapter.connectButton?.let { connectButton ->
             val buttonColor = when (state) {
                 BaseService.State.Connected ->
                     ctx.getColorAttr(R.attr.colorPrimary)
@@ -1116,7 +1060,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     // раньше здесь был жёстко зелёный gopper_400.
                     ctx.getColorAttr(R.attr.connectingColor)
                 else ->
-                    ContextCompat.getColor(ctx, R.color.material_red_500)
+                    ContextCompat.getColor(ctx, R.color.material_grey_500)
             }
 
             // Гоппер VPN: переход между состояниями.
@@ -1145,7 +1089,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 // Стрелка на знаке лежит поверх щита, поэтому её видно даже
                 // когда она того же цвета, что кнопка: красим её так же,
                 // чтобы знак менялся вместе с кнопкой.
-                (v.findViewById<ImageView>(R.id.connect_icon)?.drawable as? LayerDrawable)?.let { layers ->
+                (mainHeaderAdapter.connectIcon?.drawable as? LayerDrawable)?.let { layers ->
                     if (layers.numberOfLayers > 1) {
                         layers.getDrawable(1)?.mutate()?.setTint(color)
                     }
@@ -1203,132 +1147,75 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     /**
-     * Гоппер VPN: увести верхние кнопки при прокрутке списка.
+     * Гоппер VPN: шапка главного списка — первый элемент аккордеона.
      *
-     * Штатный AppBarLayout не годится: вложенный скролл перехватывал
-     * ViewPager2, до CoordinatorLayout он не доходил, а ручной вызов
-     * AppBarLayout.Behavior.onNestedScroll ответа не дал — проверено на
-     * устройстве. Поэтому смещение считаем сами: блок кнопок и всё, что под
-     * ним, едут вверх на одну и ту же величину, поэтому список подтягивается
-     * без дыры, а панель с шестерёнкой остаётся на месте (у неё elevation).
+     * Кнопка подключения и ряд быстрых действий — обычный элемент списка:
+     * едут вместе с карточками ровно на палец (инерции нет), возвращаются
+     * только физической прокруткой до верха. Никаких анимаций, сдвигов и
+     * наложений — бывший механизм сворачивания (translationY + маргины)
+     * удалён целиком: он то отрывал кнопки от списка, то уезжал рывком.
      */
-    private var collapseListener: RecyclerView.OnScrollListener? = null
+    private val mainHeaderAdapter = MainHeaderAdapter()
 
-    private fun attachCollapseOnScroll(listView: RecyclerView) {
-        collapseListener?.let { listView.removeOnScrollListener(it) }
-        val listener = object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
-                if (dy == 0) return
-                syncCollapse(rv)
+    inner class MainHeaderAdapter : RecyclerView.Adapter<MainHeaderAdapter.HeaderHolder>() {
+
+        // updateConnectionUi красит кнопку из любого места фрагмента,
+        // поэтому вьюхи шапки торчат наружу (заполняются в onCreateViewHolder).
+        var connectButton: CircularConnectButton? = null
+            private set
+        var connectIcon: ImageView? = null
+            private set
+
+        inner class HeaderHolder(val root: View) : RecyclerView.ViewHolder(root)
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderHolder {
+            val root = LayoutInflater.from(parent.context)
+                .inflate(R.layout.layout_main_header, parent, false)
+            connectButton = root.findViewById(R.id.connect_button)
+            connectIcon = root.findViewById(R.id.connect_icon)
+
+            // Подключение запускается на полном обороте луча: сначала
+            // круг закрашивается, и только потом VPN поднимается.
+            // Состояние читается в момент тапа, а не берётся из
+            // updateConnectionUi — к моменту тапа оно могло устареть.
+            connectButton?.setOnClickListener {
+                val activity = activity as? MainActivity ?: return@setOnClickListener
+                if (DataStore.serviceState.canStop) {
+                    activity.toggleService()
+                } else {
+                    connectButton?.startSweep(SWEEP_DURATION) { activity.toggleService() }
+                }
             }
 
-            override fun onScrollStateChanged(rv: RecyclerView, newState: Int) {
-                if (newState != RecyclerView.SCROLL_STATE_IDLE) return
-                // Страховка: контент менялся во время прокрутки (пинг,
-                // обновление подписки) — RecyclerView мог поджать позицию
-                // без скролл-событий. Сверяем блок с фактической позицией.
-                syncCollapse(rv)
+            // Ряд кнопок: обновить все подписки, пинг всех, самый быстрый.
+            // Отдельного «Пинга» для одного сервера больше нет.
+            root.findViewById<MaterialButton>(R.id.refresh_all_button).setOnClickListener {
+                MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.confirm)
+                    .setMessage(R.string.update_all_subscription)
+                    .setPositiveButton(R.string.yes) { _, _ ->
+                        runOnDefaultDispatcher {
+                            SagerDatabase.groupDao.allGroups()
+                                .filter { it.type == GroupType.SUBSCRIPTION }
+                                .forEach { GroupUpdater.startUpdate(it, true) }
+                        }
+                    }
+                    .setNegativeButton(R.string.no, null)
+                    .show()
             }
-        }
-        listView.addOnScrollListener(listener)
-        collapseListener = listener
-    }
-
-    private var collapseOffset = 0
-
-    /** Высота нижнего блока при полностью развёрнутом блоке кнопок. */
-    private var baseBottomHeight = 0
-
-    /**
-     * Гоппер VPN: блок кнопок живёт только вверху списка.
-     *
-     * Список в самом верху — блок развёрнут. Список сдвинулся хоть на
-     * пиксель — блок сворачивается и **не возвращается** на каждое
-     * движение вверх: пока пользователь где-то в середине списка,
-     * кнопок нет вообще, карточки скроллятся под панелью с шестерёнкой.
-     * Вернуться блок может только когда список дошёл до верха.
-     *
-     * Так карточки и кнопки никогда не двигаются относительно друг
-     * друга и не наезжают друг на друга: в момент перехода блок и
-     * список едут с одной скоростью (сдвиг блока = рост нижнего блока),
-     * между переходами блок либо целиком на месте, либо целиком спрятан.
-     */
-    private fun syncCollapse(rv: RecyclerView) {
-        val root = view ?: return
-        val block = root.findViewById<View>(R.id.top_buttons) ?: return
-        val below = root.findViewById<View>(R.id.bottom_block) ?: return
-        val max = block.height
-        if (max <= 0) return
-        if (baseBottomHeight == 0) baseBottomHeight = below.height
-        val target = if (rv.computeVerticalScrollOffset() == 0) 0 else max
-        if (target == collapseOffset && collapseTarget == target) return
-        animateCollapseTo(target)
-    }
-
-    /** Куда в данный момент едет анимация сворачивания. */
-    private var collapseTarget = 0
-
-    private var collapseAnimator: ValueAnimator? = null
-
-    /** Гоппер VPN: плавно привести сворачивание к целевому состоянию. */
-    private fun animateCollapseTo(target: Int) {
-        collapseTarget = target
-        collapseAnimator?.cancel()
-        collapseAnimator = ValueAnimator.ofInt(collapseOffset, target).apply {
-            duration = 150
-            addUpdateListener { animator -> applyCollapse(animator.animatedValue as Int) }
-            start()
-        }
-    }
-
-    /**
-     * Гоппер VPN: применить сдвиг сворачивания к разметке.
-     *
-     * Блок кнопок уезжает сдвигом и уходит под панель. Нижний
-     * блок растёт вверх: высоту задаём явно, отступ сдвигает верх.
-     * Одного отрицательного отступа мало — проверено на
-     * устройстве: верх вставал на место, а снизу оставалась дыра,
-     * потому что weight высоту не пересчитывает.
-     */
-    private fun applyCollapse(offset: Int) {
-        val root = view ?: return
-        val block = root.findViewById<View>(R.id.top_buttons) ?: return
-        val below = root.findViewById<View>(R.id.bottom_block) ?: return
-        collapseOffset = offset
-        block.translationY = -offset.toFloat()
-        val lp = below.layoutParams as LinearLayout.LayoutParams
-        lp.weight = 0f
-        lp.topMargin = -offset
-        lp.height = baseBottomHeight + offset
-        below.layoutParams = lp
-    }
-
-    private fun detachCollapseOnScroll() {
-        collapseAnimator?.cancel()
-        collapseListener?.let {
-            if (::accordion.isInitialized) accordion.removeOnScrollListener(it)
-        }
-        collapseListener = null
-    }
-
-    /** Гоппер VPN: вернуть блок кнопок на место, например при смене подписки. */
-    private fun resetCollapse() {
-        collapseAnimator?.cancel()
-        collapseTarget = 0
-        collapseOffset = 0
-        val root = view ?: return
-        root.findViewById<View>(R.id.top_buttons)?.translationY = 0f
-        root.findViewById<View>(R.id.bottom_block)?.let { below ->
-            val lp = below.layoutParams as? LinearLayout.LayoutParams ?: return@let
-            lp.topMargin = 0
-            if (baseBottomHeight != 0) {
-                lp.height = baseBottomHeight
-            } else {
-                // ещё ни разу не сворачивали — возвращаем исходную развёртку
-                lp.weight = 1f
-                lp.height = 0
+            root.findViewById<MaterialButton>(R.id.ping_all_button).setOnClickListener {
+                pingAllServers()
             }
-            below.layoutParams = lp
+            root.findViewById<MaterialButton>(R.id.fastest_button).setOnClickListener {
+                selectFastestServer()
+            }
+
+            return HeaderHolder(root)
+        }
+
+        override fun getItemCount(): Int = 1
+
+        override fun onBindViewHolder(holder: HeaderHolder, position: Int) {
+            // Шапка статична: цвет кнопки красит updateConnectionUi.
         }
     }
 

@@ -128,44 +128,5 @@ class ColorPickerPreference
             })
             .setNegativeButton(android.R.string.cancel, null)
             .show()
-
-        applyGlassWindow(dialog)
-    }
-
-    /**
-     * Liquid Glass: окно пикера становится стеклянным — полупрозрачная
-     * панель, сквозь которую видны настройки; на Android 12+ с включённым
-     * кросс-оконным размытием под ней ещё и размывается содержимое.
-     * Затемнение ослаблено (0.25) — иначе оно съедает стеклянный эффект.
-     * При любой неудаче диалог остаётся штатным непрозрачным.
-     */
-    private fun applyGlassWindow(dialog: AlertDialog) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-        val window = dialog.window ?: return
-        try {
-            val blurEnabled = window.windowManager.isCrossWindowBlurEnabled
-            Logs.w("glass picker: crossWindowBlur=$blurEnabled")
-
-            val factor = context.resources.displayMetrics.density
-            // Селекторы с ?attr надуваются только с темой: getColorStateList
-            // с темой контекста, затем defaultColor.
-            val glass = androidx.core.content.ContextCompat
-                .getColorStateList(context, R.color.glass_dialog)!!.defaultColor
-            val edge = androidx.core.content.ContextCompat
-                .getColorStateList(context, R.color.glass_edge)!!.defaultColor
-            window.setBackgroundDrawable(GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = 22f * factor
-                setColor(glass)
-                setStroke((1 * factor).roundToInt(), edge)
-            })
-            window.setDimAmount(0.25f)
-            if (blurEnabled) {
-                window.setBackgroundBlurRadius(30)
-            }
-        } catch (e: Exception) {
-            // Размытие не получилось — остаётся полупрозрачный диалог.
-            Logs.w("glass picker failed: $e")
-        }
     }
 }

@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   Главный экран «Гоппер VPN».
 
-  Сворачивание верхних кнопок сделано вручную, без AppBarLayout:
-  ViewPager2 перехватывает вложенный скролл, и штатные scroll-флаги
-  CoordinatorLayout не срабатывают — проверено на устройстве. Поэтому
-  при прокрутке списка блок top_buttons и всё, что под ним
-  (bottom_block), сдвигаются вверх на одинаковую величину.
-
-  Панель с названием и шестерёнкой не двигается: у неё elevation 4dp,
-  поэтому уезжающий блок уходит под неё, а не поверх.
+  Кнопки подключения и быстрых действий — шапка списка
+  (layout_main_header.xml, первый элемент аккордеона): едут вместе с
+  карточками серверов ровно на палец, без анимаций; возвращаются
+  только физической прокруткой до верха. Панель с названием и
+  шестерёнкой закреплена (elevation 4dp).
 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -22,7 +19,7 @@
         android:id="@+id/glow_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/bg_gopper_main_glow"
+        android:background="@color/gopper_page_bg"
         android:orientation="vertical">
 
         <!-- Панель закреплена -->
@@ -31,156 +28,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <!-- Уезжающий блок -->
-        <LinearLayout
-            android:id="@+id/top_buttons"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- Круглая кнопка подключения. 190dp ≈ 3 см: в Android 1dp = 1/160 дюйма,
-                 так что 3 см = 3/2,54*160 ≈ 189dp. Стоит ровно по центру экрана.
-
-                 Класс не FrameLayout, а CircularConnectButton: касание
-                 берётся только внутри окружности, тень от elevation по
-                 контуру-окружности, отклик круглый. У голого FrameLayout
-                 всё это оставалось прямоугольным — в углу квадрата
-                 нажималось, тень шла плитой.
-
-                 Фон-овал с градиентом задаётся из кода
-                 (ConfigurationFragment.updateConnectionUi) — заливка
-                 зависит от состояния подключения. MaterialButton не
-                 годится: app:backgroundTint красит его целиком и переход
-                 пропадает.
-
-                 Внутри — щит со стрелкой из иконки приложения
-                 (drawable/ic_app_mark.xml), без её синей подложки и без
-                 чёрточек под щитом: подложкой служит сама кнопка — красная,
-                 пока VPN не подключён, зелёная, когда подключён. -->
-            <io.nekohasekai.sagernet.widget.CircularConnectButton
-                android:id="@+id/connect_button"
-                android:layout_width="190dp"
-                android:layout_height="190dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginStart="12dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="12dp"
-                android:layout_marginBottom="10dp"
-                android:clickable="true"
-                android:contentDescription="@string/connect"
-                android:elevation="14dp"
-                android:focusable="true">
-
-                <!-- Высота 133dp, а не квадрат: остриё щита оттянуто на 2 мм, вьюпорт
-                     стал 268 × 296.1. Чтобы сам щит остался прежних
-                     120dp по ширине, высота пропорционально увеличена.
-
-                     translationY 12.6dp — те же 2 мм, но уже сдвигом всего
-                     щита внутри кнопки. Именно translationY, а не отступ:
-                     отступ двигал бы вью целиком и порвал бы
-                     вертикальное центрирование по центру кнопки. -->
-                <ImageView
-                    android:id="@+id/connect_icon"
-                    android:layout_width="120dp"
-                    android:layout_height="133dp"
-                    android:layout_gravity="center"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_app_mark"
-                    android:translationY="12.6dp" />
-
-            </io.nekohasekai.sagernet.widget.CircularConnectButton>
-
-            <!-- Ряд кнопок под кнопкой подключения: обновить все подписки,
-                 пинг всех (только спидометр, без надписи), самый быстрый. -->
-            <LinearLayout
-                android:id="@+id/quick_test_bar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
-                android:layout_marginBottom="8dp"
-                android:baselineAligned="false"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/refresh_all_button"
-                    style="@style/Widget.Gopper.TonalButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:contentDescription="@string/update_all_subscription"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    app:icon="@drawable/ic_baseline_refresh_24"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="20dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/ping_all_button"
-                    style="@style/Widget.Gopper.TonalButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:contentDescription="@string/ping_all_servers"
-                    android:minWidth="0dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    app:icon="@drawable/ic_baseline_speed_24"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="20dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/fastest_button"
-                    style="@style/Widget.Gopper.TonalButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:maxLines="1"
-                    android:text="@string/fastest_server"
-                    android:textAllCaps="false"
-                    android:textSize="13sp"
-                    app:icon="@drawable/ic_baseline_bolt_24"
-                    app:iconGravity="textStart"
-                    app:iconPadding="6dp"
-                    app:iconSize="18dp" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Подвижная часть: вертикальный аккордеон подписок. Едет вверх
-             вместе с блоком кнопок.
+        <!-- Список аккордеона: заголовок подписки, под ним её серверы,
+             под ними — заголовок следующей подписки. Первым элементом
+             идёт шапка с кнопками (layout_main_header.xml).
 
              Раньше здесь были вкладки подписок (TabLayout), строка
              действий текущей подписки и ViewPager2 с отдельным
              фрагментом на каждую подписку. Теперь всё это один
-             RecyclerView: заголовок подписки, под ним её серверы,
-             под ними — заголовок следующей подписки. Тап по
-             заголовку сворачивает подписку до одной строки.
+             RecyclerView. Тап по заголовку сворачивает подписку
+             до одной строки.
 
              Раньше здесь же была карточка статуса с состоянием
              подключения и выбранным сервером. Она удалена: эти данные
              показывает нижняя панель StatsBar, а дубль под кнопками
              только занимал место. -->
-        <LinearLayout
-            android:id="@+id/bottom_block"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/accordion_list"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/accordion_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:scrollbarSize="0dp"
-                tools:listitem="@layout/layout_accordion_header" />
-
-        </LinearLayout>
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:scrollbarSize="0dp"
+            tools:listitem="@layout/layout_accordion_header" />
 
     </LinearLayout>
 
