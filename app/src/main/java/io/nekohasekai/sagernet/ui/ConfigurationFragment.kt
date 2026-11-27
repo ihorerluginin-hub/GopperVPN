@@ -207,11 +207,6 @@ class ConfigurationFragment @JvmOverloads constructor(
         // список движется только под пальцем и стоит после отпускания.
         accordion = view.findViewById(R.id.accordion_list)
         accordion.layoutManager = accordionLayoutManager
-        // Гоппер VPN: инерции нет — список движется только под пальцем
-        // и стоит сразу после отпускания.
-        accordion.setOnFlingListener(object : RecyclerView.OnFlingListener() {
-            override fun onFling(velocityX: Int, velocityY: Int): Boolean = true
-        })
         adapter = AccordionAdapter()
         // В режиме выбора профиля шапки с кнопками нет — только список.
         accordion.adapter =
