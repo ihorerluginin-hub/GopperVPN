@@ -163,11 +163,11 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var connectionTestConcurrent by configurationStore.int("connectionTestConcurrent") { 5 }
     var alwaysShowAddress by configurationStore.boolean(Key.ALWAYS_SHOW_ADDRESS)
 
-    // Гоппер VPN: балансировщик. 0 — выключен, 1 — внутри подписки
-    // выбранного сервера, 2 — по всем подпискам. После каждого теста
-    // пинга, если текущий сервер не отвечает, выбирается лучший
-    // доступный кандидат и происходит переключение.
-    var balancerMode by configurationStore.int("balancerMode") { 0 }
+    // Гоппер VPN: балансировщик-плашка. Включается тапом по карточке
+    // «Балансёр» в конце списка (снаружи всех подписок). Пока включён,
+    // держит текущее подключение; когда основной сервер не проходит
+    // проверку пинга, переключает подключение на лучший доступный.
+    var balancerActive by configurationStore.boolean("balancerActive") { false }
 
     var tunImplementation by configurationStore.stringToInt(Key.TUN_IMPLEMENTATION) { TunImplementation.GVISOR }
     var profileTrafficStatistics by configurationStore.boolean(Key.PROFILE_TRAFFIC_STATISTICS)

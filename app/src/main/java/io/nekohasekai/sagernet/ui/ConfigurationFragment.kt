@@ -1270,32 +1270,21 @@ class ConfigurationFragment @JvmOverloads constructor(
     /**
      * Гоппер VPN: балансировщик.
      *
-     * Вызывается после теста пинга всех серверов. Если выбранный сервер
-     * не прошёл проверку (не ответил), выбирается лучший доступный
-     * кандидат по режиму из настроек:
-     * 0 — выключено, 1 — внутри подписки выбранного сервера,
-     * 2 — среди серверов всех подписок.
-     *
-     * Переключение то же, что у «Самого быстрого»: подсветка карточек
-     * через ProfileManager и перезапуск сервиса, если VPN подключён.
+     * Вызывается после теста пинга всех серверов, если карточка
+     * «Балансёр» включена. Балансёр держит текущее подключение: пока
+     * основной сервер проходит проверку, ничего не меняется. Если
+     * основной не ответил — подключение переключается на лучший
+     * доступный сервер (любой из всех подписок) перезапуском сервиса.
      */
     private suspend fun rebalanceAfterTest(tested: List<ProxyEntity>) {
-        val mode = DataStore.balancerMode
-        if (mode == 0) return
+        if (!DataStore.balancerActive) return
 
         val selectedId = DataStore.selectedProxy
         val selected = tested.find { it.id == selectedId }
-        // Выбранный сервер работает — трогать ничего не нужно.
+        // Основной сервер работает — подключение не трогаем.
         if (selected != null && selected.status == 1) return
 
-        val candidates = if (mode == 1) {
-            val groupId = selected?.groupId ?: DataStore.selectedGroup
-            tested.filter { it.groupId == groupId }
-        } else {
-            tested
-        }
-
-        val best = candidates.filter { it.status == 1 }.minByOrNull { it.ping }
+        val best = tested.filter { it.status == 1 }.minByOrNull { it.ping }
         if (best == null || best.id == selectedId) return
 
         val previous = selectedId
@@ -1307,10 +1296,13 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
 
         onMainDispatcher {
-            // показываем подписку, в которую переключился балансировщик
+            // показываем подписку, в которую переключился балансёр
             adapter.expand(best.groupId)
             (activity as? MainActivity)?.updateStatsBar()
             updateConnectionUi()
+            adapter.positionOfBalancer().takeIf { it >= 0 }?.let {
+                adapter.notifyItemChanged(it)
+            }
         }
     }
 
@@ -1361,6 +1353,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                     groupData[group.id]?.ids?.forEach { out.add(Row(group, it)) }
                 }
             }
+            // Гоппер VPN: карточка балансировщика — последняя строка,
+            // снаружи всех подписок. В режиме выбора профиля её нет.
+            if (!select) out.add(Row(ProxyGroup(), BALANCER_PROFILE_ID))
             rows = out
         }
 
@@ -1486,9 +1481,24 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         private val TYPE_HEADER = 0
         private val TYPE_PROFILE = 1
+        private val TYPE_BALANCER = 2
+
+        /**
+         * Гоппер VPN: id-маркер строки балансировщика. Отрицательный,
+         * чтобы никогда не совпал с настоящими id профилей: строка
+         * баланслёра не существует в базе, она рисуется всегда.
+         */
+        private val BALANCER_PROFILE_ID = -7777L
+
+        fun positionOfBalancer(): Int =
+            rows.indexOfFirst { it.profileId == BALANCER_PROFILE_ID }
 
         override fun getItemViewType(position: Int): Int =
-            if (rowAt(position)?.profileId == null) TYPE_HEADER else TYPE_PROFILE
+            when (rowAt(position)?.profileId) {
+                null -> TYPE_HEADER
+                BALANCER_PROFILE_ID -> TYPE_BALANCER
+                else -> TYPE_PROFILE
+            }
 
         override fun getItemId(position: Int): Long {
             val row = rows[position]
@@ -1503,12 +1513,16 @@ class ConfigurationFragment @JvmOverloads constructor(
             viewType: Int,
         ): RecyclerView.ViewHolder {
             val inflater = LayoutInflater.from(parent.context)
-            return if (viewType == TYPE_HEADER) {
-                AccordionHeaderHolder(
+            return when (viewType) {
+                TYPE_HEADER -> AccordionHeaderHolder(
                     inflater.inflate(R.layout.layout_accordion_header, parent, false)
                 )
-            } else {
-                ConfigurationHolder(inflater.inflate(R.layout.layout_profile, parent, false))
+
+                TYPE_BALANCER -> BalancerHolder(
+                    inflater.inflate(R.layout.layout_balancer_card, parent, false)
+                )
+
+                else -> ConfigurationHolder(inflater.inflate(R.layout.layout_profile, parent, false))
             }
         }
 
@@ -1517,6 +1531,8 @@ class ConfigurationFragment @JvmOverloads constructor(
             val profileId = row.profileId
             if (profileId == null) {
                 (holder as? AccordionHeaderHolder)?.bind(row.group)
+            } else if (profileId == BALANCER_PROFILE_ID) {
+                (holder as? BalancerHolder)?.bind()
             } else {
                 val entity = groupData[row.group.id]?.map?.get(profileId)
                 if (entity != null) {
@@ -1767,6 +1783,80 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Гоппер VPN: карточка балансировщика — последняя строка аккордеона,
+     * снаружи всех подписок.
+     *
+     * Балансёр не сервер: он не попадает в конфиг туннеля. Тап включает
+     * слежение — после каждого теста пинга балансёр «держит» выбранный
+     * сервер (подключение не трогается), а если основной не прошёл
+     * проверку, переключает подключение на лучший доступный сервер.
+     * Повторный тап выключает слежение.
+     */
+    inner class BalancerHolder(val view: View) : RecyclerView.ViewHolder(view) {
+
+        val statusText: TextView = view.findViewById(R.id.balancer_status)
+        val activeStrip: View = view.findViewById(R.id.selected_view)
+
+        init {
+            view.setOnClickListener {
+                DataStore.balancerActive = !DataStore.balancerActive
+                val position = adapter.positionOfBalancer()
+                if (position >= 0) adapter.notifyItemChanged(position)
+            }
+        }
+
+        /** Основной сервер — то, что сейчас выбрано (в памяти адаптера). */
+        fun selectedEntity(): ProxyEntity? {
+            val id = DataStore.selectedProxy
+            adapter.groupData.values.forEach { data ->
+                data.map[id]?.let { return it }
+            }
+            return null
+        }
+
+        fun bind() {
+            val context = view.context
+            val active = DataStore.balancerActive
+            activeStrip.visibility = if (active) View.VISIBLE else View.INVISIBLE
+
+            if (!active) {
+                statusText.text = context.getString(R.string.balancer_off)
+                statusText.setTextColor(
+                    context.getColorAttr(android.R.attr.textColorSecondary)
+                )
+                return
+            }
+
+            val main = selectedEntity()
+            when {
+                main == null -> {
+                    statusText.text = context.getString(R.string.balancer_no_main)
+                    statusText.setTextColor(
+                        context.getColorAttr(android.R.attr.textColorSecondary)
+                    )
+                }
+
+                main.status >= 2 -> {
+                    // Основной не прошёл проверку — балансёр не нашёл замену.
+                    statusText.text = context.getString(
+                        R.string.balancer_holding_down, main.displayName()
+                    )
+                    statusText.setTextColor(context.getColour(R.color.material_red_500))
+                }
+
+                else -> {
+                    statusText.text = context.getString(
+                        R.string.balancer_holding, main.displayName()
+                    )
+                    statusText.setTextColor(
+                        context.getColorAttr(android.R.attr.textColorSecondary)
+                    )
+                }
+            }
+        }
+    }
+
     val profileAccess = Mutex()
     val reloadAccess = Mutex()
 
@@ -1829,6 +1919,13 @@ class ConfigurationFragment @JvmOverloads constructor(
                             if (DataStore.serviceState.canStop && reloadAccess.tryLock()) {
                                 SagerNet.reloadService()
                                 reloadAccess.unlock()
+                            }
+                            // «Держит: …» на карточке балансёра должно
+                            // показать нового основного сразу.
+                            onMainDispatcher {
+                                adapter.positionOfBalancer().takeIf { it >= 0 }?.let {
+                                    adapter.notifyItemChanged(it)
+                                }
                             }
                         } else if (SagerNet.isTv) {
                             if (DataStore.serviceState.started) {

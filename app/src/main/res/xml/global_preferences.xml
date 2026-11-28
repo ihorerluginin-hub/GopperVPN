@@ -234,14 +234,6 @@
             app:key="connectionTestURL"
             app:title="@string/connection_test_url"
             app:useSimpleSummaryProvider="true" />
-        <moe.matsuri.nb4a.ui.SimpleMenuPreference
-            app:defaultValue="0"
-            app:entries="@array/balancer_mode_entry"
-            app:entryValues="@array/int_array_3"
-            app:icon="@drawable/ic_baseline_compare_arrows_24"
-            app:key="balancerMode"
-            app:title="@string/balancer_mode"
-            app:useSimpleSummaryProvider="true" />
         <SwitchPreference
             app:icon="@drawable/baseline_construction_24"
             app:key="enableClashAPI"
