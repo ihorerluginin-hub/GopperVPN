@@ -47,6 +47,7 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.aidl.TrafficData
 import io.nekohasekai.sagernet.bg.BaseService
+import io.nekohasekai.sagernet.bg.Balancer
 import io.nekohasekai.sagernet.bg.proto.UrlTest
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.GroupManager
@@ -1803,6 +1804,10 @@ class ConfigurationFragment @JvmOverloads constructor(
                 DataStore.balancerActive = !DataStore.balancerActive
                 val position = adapter.positionOfBalancer()
                 if (position >= 0) adapter.notifyItemChanged(position)
+                // Механика «Выберите за меня» (GemFloppe): при включении
+                // балансёр сразу проверяет все серверы и берёт рабочий,
+                // дальше поддерживает выбор по кругу.
+                Balancer.refreshState()
             }
         }
 
