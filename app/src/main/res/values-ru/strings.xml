@@ -501,6 +501,12 @@
 <string name="fastest_none">Нет доступных серверов</string>
 <string name="ping_all_summary">Проверено серверов: %1$d, доступно %2$d, недоступно %3$d</string>
 <string name="connection_test_running">Проверка уже выполняется</string>
+<string name="balancer_mode">Балансировка</string>
+<string-array name="balancer_mode_entry">
+    <item>Выключено</item>
+    <item>Внутри подписки</item>
+    <item>Все подписки</item>
+</string-array>
 
 <!-- NekoBox Fast: link reading -->
 <string name="import_from_qr_image">Из QR-кода на фото</string>

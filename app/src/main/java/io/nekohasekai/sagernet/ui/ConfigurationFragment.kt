@@ -692,14 +692,14 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
 
                     2 -> {
-                        profileStatusText = profile.error
+                        // Сервер не ответил — всегда «Недоступен», без
+                        // технических подробностей в диалоге проверки.
+                        profileStatusText = getString(R.string.unavailable)
                         profileStatusColor = context.getColour(R.color.material_red_500)
                     }
 
                     3 -> {
-                        val err = profile.error ?: ""
-                        val msg = Protocols.genFriendlyMsg(err)
-                        profileStatusText = if (msg != err) msg else getString(R.string.unavailable)
+                        profileStatusText = getString(R.string.unavailable)
                         profileStatusColor = context.getColour(R.color.material_red_500)
                     }
                 }
@@ -946,10 +946,9 @@ class ConfigurationFragment @JvmOverloads constructor(
      */
     @OptIn(DelicateCoroutinesApi::class)
     private fun testAllProfiles(label: String, onFinished: suspend (List<ProxyEntity>) -> Unit) {
-        if (DataStore.runningTest) {
-            runOnMainDispatcher { snackbar(R.string.connection_test_running).show() }
-            return
-        }
+        // Повторный запуск при идущей проверке молча игнорируется:
+        // серые уведомления снизу убраны.
+        if (DataStore.runningTest) return
         DataStore.runningTest = true
 
         val test = TestDialog()
@@ -1225,17 +1224,14 @@ class ConfigurationFragment @JvmOverloads constructor(
     fun pingAllServers() {
         val label = getString(R.string.ping_all_servers)
         testAllProfiles(label) { tested ->
-            val available = tested.count { it.status == 1 }
             onMainDispatcher {
-                snackbar(
-                    getString(
-                        R.string.ping_all_summary, tested.size, available, tested.size - available
-                    )
-                ).show()
                 // пинг серверов обновился — нижняя панель покажет новые значения
                 (activity as? MainActivity)?.updateStatsBar()
                 updateConnectionUi()
             }
+            // Гоппер VPN: балансировщик — если текущий сервер не ответил,
+            // переключаемся на лучший доступный (по настройке).
+            rebalanceAfterTest(tested)
         }
     }
 
@@ -1248,9 +1244,6 @@ class ConfigurationFragment @JvmOverloads constructor(
         testAllProfiles(label) { tested ->
             val best = tested.filter { it.status == 1 }.minByOrNull { it.ping }
             if (best == null) {
-                onMainDispatcher {
-                    snackbar(R.string.fastest_none).show()
-                }
                 return@testAllProfiles
             }
 
@@ -1267,13 +1260,57 @@ class ConfigurationFragment @JvmOverloads constructor(
             onMainDispatcher {
                 // показываем подписку, в которой оказался самый быстрый сервер
                 adapter.expand(best.groupId)
-                snackbar(
-                    getString(R.string.fastest_switched, best.displayName(), best.ping)
-                ).show()
                 // выбрали другой сервер — нижняя панель покажет новое имя и пинг
                 (activity as? MainActivity)?.updateStatsBar()
                 updateConnectionUi()
             }
+        }
+    }
+
+    /**
+     * Гоппер VPN: балансировщик.
+     *
+     * Вызывается после теста пинга всех серверов. Если выбранный сервер
+     * не прошёл проверку (не ответил), выбирается лучший доступный
+     * кандидат по режиму из настроек:
+     * 0 — выключено, 1 — внутри подписки выбранного сервера,
+     * 2 — среди серверов всех подписок.
+     *
+     * Переключение то же, что у «Самого быстрого»: подсветка карточек
+     * через ProfileManager и перезапуск сервиса, если VPN подключён.
+     */
+    private suspend fun rebalanceAfterTest(tested: List<ProxyEntity>) {
+        val mode = DataStore.balancerMode
+        if (mode == 0) return
+
+        val selectedId = DataStore.selectedProxy
+        val selected = tested.find { it.id == selectedId }
+        // Выбранный сервер работает — трогать ничего не нужно.
+        if (selected != null && selected.status == 1) return
+
+        val candidates = if (mode == 1) {
+            val groupId = selected?.groupId ?: DataStore.selectedGroup
+            tested.filter { it.groupId == groupId }
+        } else {
+            tested
+        }
+
+        val best = candidates.filter { it.status == 1 }.minByOrNull { it.ping }
+        if (best == null || best.id == selectedId) return
+
+        val previous = selectedId
+        DataStore.selectedProxy = best.id
+        ProfileManager.postUpdate(previous)
+        ProfileManager.postUpdate(best, true)
+        if (DataStore.serviceState.canStop) {
+            SagerNet.reloadService()
+        }
+
+        onMainDispatcher {
+            // показываем подписку, в которую переключился балансировщик
+            adapter.expand(best.groupId)
+            (activity as? MainActivity)?.updateStatsBar()
+            updateConnectionUi()
         }
     }
 
@@ -1852,16 +1889,14 @@ class ConfigurationFragment @JvmOverloads constructor(
                 profileStatus.text = getString(R.string.available, proxyEntity.ping)
                 profileStatus.setTextColor(requireContext().getColour(R.color.material_green_500))
             } else {
+                // Не ответил на проверку — «Недоступен», без технических
+                // подробностей на карточке (они остаются по тапу).
                 profileStatus.setTextColor(requireContext().getColour(R.color.material_red_500))
-                if (proxyEntity.status == 2) {
-                    profileStatus.text = proxyEntity.error
-                }
+                profileStatus.text = getString(R.string.unavailable)
             }
 
             if (proxyEntity.status == 3) {
                 val err = proxyEntity.error ?: "<?>"
-                val msg = Protocols.genFriendlyMsg(err)
-                profileStatus.text = if (msg != err) msg else getString(R.string.unavailable)
                 profileStatus.setOnClickListener {
                     alert(err).tryToShow()
                 }

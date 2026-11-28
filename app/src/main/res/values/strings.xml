@@ -589,6 +589,7 @@
 <string name="fastest_none">No available servers found</string>
 <string name="ping_all_summary">Tested %1$d servers: %2$d available, %3$d unavailable</string>
 <string name="connection_test_running">A connection test is already running</string>
+<string name="balancer_mode">Balancer</string>
 
 <!-- NekoBox Fast: link reading -->
 <string name="import_from_qr_image">From QR image</string>
