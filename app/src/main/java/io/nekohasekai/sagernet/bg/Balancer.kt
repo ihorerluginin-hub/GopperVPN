@@ -54,14 +54,13 @@ object Balancer {
     private fun start() {
         if (tickerJob?.isActive == true) return
         tickerJob = scope.launch {
-            // при включении — немедленная проверка И выбор лучшего
-            // рабочего (механика «Выберите за меня» из GemFloppe)
-            runProbe(pickBestAlways = true)
+            // при включении — немедленная проверка и наведение порядка:
+            // основной на контакт, запасной держится наготове
+            runProbe()
             while (isActive) {
                 delay(INTERVAL_MS)
                 if (!DataStore.balancerActive) break
-                // поддержка: подключение не трогаем, пока основной жив
-                runProbe(pickBestAlways = false)
+                runProbe()
             }
         }
     }
@@ -71,7 +70,7 @@ object Balancer {
         tickerJob = null
     }
 
-    private suspend fun runProbe(pickBestAlways: Boolean) {
+    private suspend fun runProbe() {
         if (DataStore.runningTest) return
         if (!probeAccess.tryLock()) return
         try {
@@ -110,7 +109,7 @@ object Balancer {
             // карточки серверов перечитают статусы из базы
             profiles.map { it.groupId }.distinct().forEach { GroupManager.postReload(it) }
 
-            pickServer(profiles, pickBestAlways)
+            maintain(profiles)
         } finally {
             DataStore.runningTest = false
             probeAccess.unlock()
@@ -118,30 +117,79 @@ object Balancer {
     }
 
     /**
-     * Выбор сервера по результатам проверки.
+     * Гоппер VPN: горячий запасной.
      *
-     * pickBestAlways = true — «Выберите за меня» при включении: берём
-     * лучший доступный всегда. false — поддержка: подключение держим на
-     * текущем сервере и переключаемся, только если он не прошёл проверку.
+     * Балансёр держит пару: основной сервер (выбранный) и второй рабочий
+     * «на контакте». Пока основной отвечает, подключение не трогается —
+     * следим, чтобы запасной оставался рабочим, и при его смерти берём
+     * новый запасной. Когда основной отключается (не отвечает на пинг),
+     * подключение переключается на тот запасной, что держится, и вместо
+     * него выбирается новый.
      */
-    private suspend fun pickServer(
+    private suspend fun maintain(profiles: List<io.nekohasekai.sagernet.database.ProxyEntity>) {
+        if (!DataStore.balancerActive) return
+
+        val mainId = DataStore.selectedProxy
+        val main = profiles.find { it.id == mainId }
+        var backupId = DataStore.balancerBackupId
+        if (backupId == mainId) {
+            DataStore.balancerBackupId = 0
+            backupId = 0
+        }
+        val backup = profiles.find { it.id == backupId }
+
+        val mainAlive = main != null && main.status == 1
+
+        if (!mainAlive) {
+            // Основной отключился — переключаемся на держимый запасной.
+            val target = backup?.takeIf { it.status == 1 }
+                ?: profiles.filter { it.status == 1 && it.id != mainId }
+                    .minByOrNull { it.ping }
+                ?: return
+            switchTo(target, previousId = mainId)
+            // Основным стал бывший запасной — выбираем новый запасной.
+            pickBackup(profiles, excludeId = target.id)
+            return
+        }
+
+        // Основной жив — держим второй рабочий на контакте.
+        if (backup == null || backup.status != 1) {
+            pickBackup(profiles, excludeId = mainId)
+        }
+    }
+
+    /** Выбрать новый запасной: лучший рабочий, не основной. */
+    private suspend fun pickBackup(
         profiles: List<io.nekohasekai.sagernet.database.ProxyEntity>,
-        pickBestAlways: Boolean,
+        excludeId: Long,
     ) {
-        val selectedId = DataStore.selectedProxy
-        val selected = profiles.find { it.id == selectedId }
-        if (!pickBestAlways && selected != null && selected.status == 1) return
+        val mainId = DataStore.selectedProxy
+        val best = profiles.filter {
+            it.status == 1 && it.id != mainId && it.id != excludeId
+        }.minByOrNull { it.ping } ?: return
+        DataStore.balancerBackupId = best.id
+        Logs.d("Balancer: backup is ${best.displayName()}")
+    }
 
-        val best = profiles.filter { it.status == 1 }.minByOrNull { it.ping }
-        if (best == null || best.id == selectedId) return
-
-        DataStore.selectedProxy = best.id
-        selectedId.let { ProfileManager.postUpdate(it) }
-        ProfileManager.postUpdate(best, true)
+    /** Переключить подключение на сервер (перезапуск сервиса при работе). */
+    private suspend fun switchTo(profile: io.nekohasekai.sagernet.database.ProxyEntity, previousId: Long) {
+        DataStore.selectedProxy = profile.id
+        DataStore.balancerBackupId = 0
+        if (previousId != profile.id) ProfileManager.postUpdate(previousId)
+        ProfileManager.postUpdate(profile, true)
         if (DataStore.serviceState.canStop) {
             SagerNet.reloadService()
         }
-        Logs.d("Balancer: picked ${best.displayName()}")
+        Logs.d("Balancer: main down, switched to ${profile.displayName()}")
+    }
+
+    /**
+     * Общий вход для балансировки из диалоговых проверок («Пинг всех»).
+     * Работает, только когда карточка «Выбери за меня» включена.
+     */
+    suspend fun rebalanceFrom(tested: List<io.nekohasekai.sagernet.database.ProxyEntity>) {
+        if (!DataStore.balancerActive) return
+        maintain(tested)
     }
 
 }

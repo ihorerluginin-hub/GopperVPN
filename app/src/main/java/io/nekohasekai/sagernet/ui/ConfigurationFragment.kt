@@ -1209,6 +1209,12 @@ class ConfigurationFragment @JvmOverloads constructor(
                 selectFastestServer()
             }
 
+            // Гоппер VPN: fix «кнопка ломается после настроек». onViewCreated
+            // зовёт updateConnectionUi раньше, чем RecyclerView создаёт вьюху
+            // шапки, — на главном экране после возврата кнопка оставалась
+            // непокрашенной. Красим её в момент создания.
+            updateConnectionUi()
+
             return HeaderHolder(root)
         }
 
@@ -1230,9 +1236,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                 (activity as? MainActivity)?.updateStatsBar()
                 updateConnectionUi()
             }
-            // Гоппер VPN: балансировщик — если текущий сервер не ответил,
-            // переключаемся на лучший доступный (по настройке).
-            rebalanceAfterTest(tested)
+            // Гоппер VPN: балансировка — если карточка «Выбери за меня»
+            // включена, балансёр поддерживает пару «основной + запасной».
+            Balancer.rebalanceFrom(tested)
         }
     }
 
@@ -1264,45 +1270,6 @@ class ConfigurationFragment @JvmOverloads constructor(
                 // выбрали другой сервер — нижняя панель покажет новое имя и пинг
                 (activity as? MainActivity)?.updateStatsBar()
                 updateConnectionUi()
-            }
-        }
-    }
-
-    /**
-     * Гоппер VPN: балансировщик.
-     *
-     * Вызывается после теста пинга всех серверов, если карточка
-     * «Балансёр» включена. Балансёр держит текущее подключение: пока
-     * основной сервер проходит проверку, ничего не меняется. Если
-     * основной не ответил — подключение переключается на лучший
-     * доступный сервер (любой из всех подписок) перезапуском сервиса.
-     */
-    private suspend fun rebalanceAfterTest(tested: List<ProxyEntity>) {
-        if (!DataStore.balancerActive) return
-
-        val selectedId = DataStore.selectedProxy
-        val selected = tested.find { it.id == selectedId }
-        // Основной сервер работает — подключение не трогаем.
-        if (selected != null && selected.status == 1) return
-
-        val best = tested.filter { it.status == 1 }.minByOrNull { it.ping }
-        if (best == null || best.id == selectedId) return
-
-        val previous = selectedId
-        DataStore.selectedProxy = best.id
-        ProfileManager.postUpdate(previous)
-        ProfileManager.postUpdate(best, true)
-        if (DataStore.serviceState.canStop) {
-            SagerNet.reloadService()
-        }
-
-        onMainDispatcher {
-            // показываем подписку, в которую переключился балансёр
-            adapter.expand(best.groupId)
-            (activity as? MainActivity)?.updateStatsBar()
-            updateConnectionUi()
-            adapter.positionOfBalancer().takeIf { it >= 0 }?.let {
-                adapter.notifyItemChanged(it)
             }
         }
     }
@@ -1348,15 +1315,15 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         private fun rebuildRows() {
             val out = ArrayList<Row>(groupList.size + 8)
+            // Гоппер VPN: карточка «Выбери за меня» — в начале списка,
+            // под шапкой с кнопками. В режиме выбора профиля её нет.
+            if (!select) out.add(Row(ProxyGroup(), BALANCER_PROFILE_ID))
             for (group in groupList) {
                 out.add(Row(group, null))
                 if (group.id in expanded) {
                     groupData[group.id]?.ids?.forEach { out.add(Row(group, it)) }
                 }
             }
-            // Гоппер VPN: карточка балансировщика — последняя строка,
-            // снаружи всех подписок. В режиме выбора профиля её нет.
-            if (!select) out.add(Row(ProxyGroup(), BALANCER_PROFILE_ID))
             rows = out
         }
 
