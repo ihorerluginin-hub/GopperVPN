@@ -1921,12 +1921,18 @@ class ConfigurationFragment @JvmOverloads constructor(
 
                         if (update) {
                             ProfileManager.postUpdate(lastSelected)
+                            // Выбор конкретного сервера снимает «Выбери за
+                            // меня» — как в GemFloppe: либо конкретный
+                            // сервер, либо автовыбор.
+                            if (DataStore.balancerActive) {
+                                DataStore.balancerActive = false
+                                Balancer.refreshState()
+                            }
                             if (DataStore.serviceState.canStop && reloadAccess.tryLock()) {
                                 SagerNet.reloadService()
                                 reloadAccess.unlock()
                             }
-                            // «Держит: …» на карточке балансёра должно
-                            // показать нового основного сразу.
+                            // Статус «Выбери за меня» обновляется сразу.
                             onMainDispatcher {
                                 adapter.positionOfBalancer().takeIf { it >= 0 }?.let {
                                     adapter.notifyItemChanged(it)

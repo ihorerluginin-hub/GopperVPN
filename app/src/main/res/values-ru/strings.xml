@@ -501,8 +501,8 @@
 <string name="fastest_none">Нет доступных серверов</string>
 <string name="ping_all_summary">Проверено серверов: %1$d, доступно %2$d, недоступно %3$d</string>
 <string name="connection_test_running">Проверка уже выполняется</string>
-<string name="balancer_name">Балансёр</string>
-<string name="balancer_off">Выключен — нажми, чтобы включить</string>
+<string name="balancer_name">Выбери за меня</string>
+<string name="balancer_off">Проверит серверы и возьмёт рабочий</string>
 <string name="balancer_holding">Держит: %1$s</string>
 <string name="balancer_holding_down">Держит: %1$s · основной недоступен</string>
 <string name="balancer_no_main">Сервер не выбран</string>
