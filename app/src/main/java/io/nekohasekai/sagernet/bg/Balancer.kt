@@ -54,12 +54,14 @@ object Balancer {
     private fun start() {
         if (tickerJob?.isActive == true) return
         tickerJob = scope.launch {
-            // при включении — немедленная проверка, как «Проверить всё»
-            runProbe()
+            // при включении — немедленная проверка И выбор лучшего
+            // рабочего (механика «Выберите за меня» из GemFloppe)
+            runProbe(pickBestAlways = true)
             while (isActive) {
                 delay(INTERVAL_MS)
                 if (!DataStore.balancerActive) break
-                runProbe()
+                // поддержка: подключение не трогаем, пока основной жив
+                runProbe(pickBestAlways = false)
             }
         }
     }
@@ -69,7 +71,7 @@ object Balancer {
         tickerJob = null
     }
 
-    private suspend fun runProbe() {
+    private suspend fun runProbe(pickBestAlways: Boolean) {
         if (DataStore.runningTest) return
         if (!probeAccess.tryLock()) return
         try {
@@ -108,18 +110,27 @@ object Balancer {
             // карточки серверов перечитают статусы из базы
             profiles.map { it.groupId }.distinct().forEach { GroupManager.postReload(it) }
 
-            switchIfMainInvalid(profiles)
+            pickServer(profiles, pickBestAlways)
         } finally {
             DataStore.runningTest = false
             probeAccess.unlock()
         }
     }
 
-    /** Основной не ответил — переключить подключение на лучший доступный. */
-    private suspend fun switchIfMainInvalid(profiles: List<io.nekohasekai.sagernet.database.ProxyEntity>) {
+    /**
+     * Выбор сервера по результатам проверки.
+     *
+     * pickBestAlways = true — «Выберите за меня» при включении: берём
+     * лучший доступный всегда. false — поддержка: подключение держим на
+     * текущем сервере и переключаемся, только если он не прошёл проверку.
+     */
+    private suspend fun pickServer(
+        profiles: List<io.nekohasekai.sagernet.database.ProxyEntity>,
+        pickBestAlways: Boolean,
+    ) {
         val selectedId = DataStore.selectedProxy
         val selected = profiles.find { it.id == selectedId }
-        if (selected != null && selected.status == 1) return
+        if (!pickBestAlways && selected != null && selected.status == 1) return
 
         val best = profiles.filter { it.status == 1 }.minByOrNull { it.ping }
         if (best == null || best.id == selectedId) return
@@ -130,7 +141,7 @@ object Balancer {
         if (DataStore.serviceState.canStop) {
             SagerNet.reloadService()
         }
-        Logs.d("Balancer: switched to ${best.displayName()}")
+        Logs.d("Balancer: picked ${best.displayName()}")
     }
 
 }
